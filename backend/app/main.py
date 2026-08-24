@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from .database import Base, engine
-from .routes import merchants, products
+from .routes import merchants, products, buyer
 
 
 Base.metadata.create_all(bind=engine)
@@ -16,6 +16,7 @@ app = FastAPI(
 
 app.include_router(merchants.router)
 app.include_router(products.router)
+app.include_router(buyer.router)
 
 
 @app.get("/")
