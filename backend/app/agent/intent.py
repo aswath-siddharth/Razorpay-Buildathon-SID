@@ -1,8 +1,11 @@
 import os
 from datetime import date
 
-from openai import OpenAI
+from dotenv import load_dotenv
+from groq import Groq
 from pydantic import BaseModel, Field
+
+load_dotenv()
 
 
 class IntentMandate(BaseModel):
@@ -41,50 +44,89 @@ class IntentMandate(BaseModel):
 def parse_intent(user_message: str) -> IntentMandate:
     """
     Convert natural-language shopping intent into
-    a structured IntentMandate.
+    a structured IntentMandate using Groq.
     """
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
         raise RuntimeError(
-            "OPENAI_API_KEY is not configured"
+            "GROQ_API_KEY is not configured"
         )
 
-    client = OpenAI(api_key=api_key)
+    client = Groq(api_key=api_key)
 
     today = date.today().isoformat()
 
-    response = client.responses.parse(
-        model="gpt-4o-mini",
-        input=[
+    schema = {
+        "type": "object",
+        "properties": {
+            "category": {
+                "type": "string"
+            },
+            "budget_max": {
+                "type": ["number", "null"]
+            },
+            "size": {
+                "type": ["string", "null"]
+            },
+            "delivery_by": {
+                "type": ["string", "null"]
+            },
+            "max_retries": {
+                "type": "integer",
+                "minimum": 0
+            }
+        },
+        "required": [
+            "category",
+            "budget_max",
+            "size",
+            "delivery_by",
+            "max_retries"
+        ],
+        "additionalProperties": False
+    }
+
+    completion = client.chat.completions.create(
+        model="openai/gpt-oss-20b",
+        messages=[
             {
                 "role": "system",
                 "content": (
                     "You are the intent parser for an AI buyer. "
-                    "Extract only constraints explicitly requested "
-                    "or clearly implied by the user. "
+                    "Extract the user's shopping constraints. "
                     f"Today's date is {today}. "
-                    "Convert relative delivery dates such as "
-                    "'Friday' into an absolute date. "
-                    "Use category names compatible with a product "
-                    "catalog, such as 'running_shoes'. "
-                    "Do not invent a budget, size, brand, or deadline."
-                ),
+                    "Convert relative delivery dates into "
+                    "absolute YYYY-MM-DD dates. "
+                    "Use catalog-compatible categories such as "
+                    "'running_shoes'. "
+                    "Do not invent constraints that the user "
+                    "did not specify. "
+                    "Return only JSON matching the supplied schema."
+                )
             },
             {
                 "role": "user",
-                "content": user_message,
-            },
+                "content": user_message
+            }
         ],
-        text_format=IntentMandate,
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "intent_mandate",
+                "strict": True,
+                "schema": schema
+            }
+        },
+        temperature=0
     )
 
-    mandate = response.output_parsed
+    content = completion.choices[0].message.content
 
-    if mandate is None:
+    if not content:
         raise ValueError(
-            "Could not parse shopping intent"
+            "Groq returned an empty response"
         )
 
-    return mandate
+    return IntentMandate.model_validate_json(content)
