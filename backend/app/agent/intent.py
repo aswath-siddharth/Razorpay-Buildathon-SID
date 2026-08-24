@@ -12,8 +12,8 @@ load_dotenv()
 
 class IntentMandate(BaseModel):
     """
-    Structured representation of what the user authorized
-    the buyer agent to search for.
+    Trusted structured representation of the user's
+    shopping authorization.
     """
 
     category: str = Field(
@@ -43,6 +43,25 @@ class IntentMandate(BaseModel):
     )
 
 
+class RawIntent(BaseModel):
+    """
+    Untrusted output received from the LLM.
+
+    We intentionally keep delivery_by as a string here because
+    the LLM may return values such as 'Friday'.
+    """
+
+    category: str
+
+    budget_max: float | None = None
+
+    size: str | None = None
+
+    delivery_by: str | None = None
+
+    max_retries: int = 2
+
+
 WEEKDAYS = {
     "monday": 0,
     "tuesday": 1,
@@ -59,10 +78,8 @@ def resolve_relative_delivery_date(
     today: date,
 ) -> date | None:
     """
-    Resolve explicit weekday references such as
-    'by Friday' deterministically.
-
-    This avoids relying on the LLM for date arithmetic.
+    Resolve weekday references such as 'by Friday'
+    deterministically.
     """
 
     message = user_message.lower()
@@ -84,10 +101,12 @@ def resolve_relative_delivery_date(
     return None
 
 
-def parse_intent(user_message: str) -> IntentMandate:
+def parse_intent(
+    user_message: str
+) -> IntentMandate:
     """
     Convert natural-language shopping intent into
-    a structured IntentMandate using Groq.
+    a trusted IntentMandate using Groq.
     """
 
     api_key = os.getenv("GROQ_API_KEY")
@@ -97,7 +116,9 @@ def parse_intent(user_message: str) -> IntentMandate:
             "GROQ_API_KEY is not configured"
         )
 
-    client = Groq(api_key=api_key)
+    client = Groq(
+        api_key=api_key
+    )
 
     today = date.today().isoformat()
 
@@ -170,16 +191,18 @@ def parse_intent(user_message: str) -> IntentMandate:
             "Groq returned an empty response"
         )
 
-    # Parse the LLM response into our trusted Pydantic model.
-    mandate = IntentMandate.model_validate_json(
+    # --------------------------------------------------
+    # STEP 1: Parse untrusted LLM output
+    # --------------------------------------------------
+
+    raw_intent = RawIntent.model_validate_json(
         content
     )
 
-    # Application-controlled authorization default.
-    # The LLM does not get to decide this.
-    mandate.max_retries = 2
+    # --------------------------------------------------
+    # STEP 2: Resolve delivery date ourselves
+    # --------------------------------------------------
 
-    # Resolve relative weekdays deterministically.
     resolved_delivery_date = (
         resolve_relative_delivery_date(
             user_message=user_message,
@@ -188,6 +211,41 @@ def parse_intent(user_message: str) -> IntentMandate:
     )
 
     if resolved_delivery_date is not None:
-        mandate.delivery_by = resolved_delivery_date
+
+        delivery_by = resolved_delivery_date
+
+    elif raw_intent.delivery_by:
+
+        try:
+
+            delivery_by = date.fromisoformat(
+                raw_intent.delivery_by
+            )
+
+        except ValueError:
+
+            delivery_by = None
+
+    else:
+
+        delivery_by = None
+
+    # --------------------------------------------------
+    # STEP 3: Application-controlled authorization
+    # --------------------------------------------------
+
+    max_retries = 2
+
+    # --------------------------------------------------
+    # STEP 4: Construct trusted IntentMandate
+    # --------------------------------------------------
+
+    mandate = IntentMandate(
+        category=raw_intent.category,
+        budget_max=raw_intent.budget_max,
+        size=raw_intent.size,
+        delivery_by=delivery_by,
+        max_retries=max_retries,
+    )
 
     return mandate
