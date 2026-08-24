@@ -1,9 +1,11 @@
 import os
-from datetime import date
+import re
+from datetime import date, timedelta
 
 from dotenv import load_dotenv
 from groq import Groq
 from pydantic import BaseModel, Field
+
 
 load_dotenv()
 
@@ -39,6 +41,47 @@ class IntentMandate(BaseModel):
         ge=0,
         description="Maximum number of retries allowed"
     )
+
+
+WEEKDAYS = {
+    "monday": 0,
+    "tuesday": 1,
+    "wednesday": 2,
+    "thursday": 3,
+    "friday": 4,
+    "saturday": 5,
+    "sunday": 6,
+}
+
+
+def resolve_relative_delivery_date(
+    user_message: str,
+    today: date,
+) -> date | None:
+    """
+    Resolve explicit weekday references such as
+    'by Friday' deterministically.
+
+    This avoids relying on the LLM for date arithmetic.
+    """
+
+    message = user_message.lower()
+
+    for weekday_name, weekday_number in WEEKDAYS.items():
+
+        if re.search(
+            rf"\b{weekday_name}\b",
+            message
+        ):
+            days_ahead = (
+                weekday_number - today.weekday()
+            ) % 7
+
+            return today + timedelta(
+                days=days_ahead
+            )
+
+    return None
 
 
 def parse_intent(user_message: str) -> IntentMandate:
@@ -97,8 +140,6 @@ def parse_intent(user_message: str) -> IntentMandate:
                     "You are the intent parser for an AI buyer. "
                     "Extract the user's shopping constraints. "
                     f"Today's date is {today}. "
-                    "Convert relative delivery dates into "
-                    "absolute YYYY-MM-DD dates. "
                     "Use catalog-compatible categories such as "
                     "'running_shoes'. "
                     "Do not invent constraints that the user "
@@ -129,4 +170,24 @@ def parse_intent(user_message: str) -> IntentMandate:
             "Groq returned an empty response"
         )
 
-    return IntentMandate.model_validate_json(content)
+    # Parse the LLM response into our trusted Pydantic model.
+    mandate = IntentMandate.model_validate_json(
+        content
+    )
+
+    # Application-controlled authorization default.
+    # The LLM does not get to decide this.
+    mandate.max_retries = 2
+
+    # Resolve relative weekdays deterministically.
+    resolved_delivery_date = (
+        resolve_relative_delivery_date(
+            user_message=user_message,
+            today=date.today(),
+        )
+    )
+
+    if resolved_delivery_date is not None:
+        mandate.delivery_by = resolved_delivery_date
+
+    return mandate
