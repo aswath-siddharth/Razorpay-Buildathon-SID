@@ -14,6 +14,8 @@ mandate = IntentMandate(
     delivery_by=date(2026, 8, 28),
     max_retries=2,
 )
+print("\n=== MANDATE ===")
+print(mandate.model_dump())
 
 result = discover_products(
     db=db,
