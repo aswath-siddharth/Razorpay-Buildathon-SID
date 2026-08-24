@@ -1,4 +1,3 @@
-from datetime import date
 from sqlalchemy.orm import Session
 
 from ..models import Product, Merchant
@@ -31,6 +30,7 @@ def discover_products(
             budget_max=mandate.budget_max,
             size=mandate.size,
             delivery_by=mandate.delivery_by,
+            category=mandate.category,
         )
 
         candidate = {
@@ -56,7 +56,6 @@ def discover_products(
 
         candidates.append(candidate)
 
-    # Only accepted products participate in ranking.
     accepted = [
         candidate
         for candidate in candidates
@@ -69,6 +68,8 @@ def discover_products(
     )
 
     return {
+        "total_products_considered": len(candidates),
+        "matching_products": len(accepted),
         "all_candidates": candidates,
         "ranked_candidates": accepted,
         "best_candidate": (

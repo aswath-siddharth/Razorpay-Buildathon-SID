@@ -136,3 +136,4 @@ def calculate_score(
             score += delivery_score * 20
 
     return round(score, 2)
+
