@@ -157,10 +157,15 @@ def validate_payment_mandate(
     )
 
     if not mandate:
-        raise HTTPException(
-            status_code=404,
-            detail="Payment mandate not found"
+        print(
+            f"Webhook ignored: payment mandate not found "
+            f"for Razorpay order {razorpay_order_id}"
         )
+
+        return {
+            "status": "ignored",
+            "reason": "Payment mandate not found"
+        }
 
     # Single-use enforcement
     if mandate.used:
