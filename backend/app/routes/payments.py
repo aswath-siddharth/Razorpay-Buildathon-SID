@@ -567,14 +567,16 @@ async def razorpay_webhook(
         )
 
         if not mandate:
-            raise HTTPException(
-                status_code=404,
-                detail=(
-                    "No payment mandate found "
-                    "for Razorpay order"
-                )
+            print(
+                f"Webhook ignored: no payment mandate found "
+                f"for Razorpay order {razorpay_order_id}"
             )
 
+        return {
+            "status": "ignored",
+            "reason": "No payment mandate found for Razorpay order",
+            "razorpay_order_id": razorpay_order_id,
+        }
         # -------------------------------------------------
         # Idempotency
         #
