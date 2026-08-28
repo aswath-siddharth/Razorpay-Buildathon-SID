@@ -3,10 +3,10 @@ from fastapi import FastAPI
 from .database import Base, engine
 from .routes import merchants, products, buyer, payments
 
-
+from seed import seed_database
 Base.metadata.create_all(bind=engine)
 
-
+seed_database()
 app = FastAPI(
     title="AI Buyer API",
     description="Agent-readable merchant catalog for AI Buyer",
