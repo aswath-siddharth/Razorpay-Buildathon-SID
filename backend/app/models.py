@@ -49,3 +49,37 @@ class Product(Base):
         "Merchant",
         back_populates="products"
     )
+
+
+class PaymentMandate(Base):
+    __tablename__ = "payment_mandates"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    amount = Column(Float, nullable=False)
+
+    merchant_id = Column(
+        Integer,
+        ForeignKey("merchants.id"),
+        nullable=False
+    )
+
+    order_ref = Column(String, nullable=False, unique=True)
+
+    razorpay_order_id = Column(
+        String,
+        nullable=True,
+        unique=True
+    )
+
+    expires_at = Column(String, nullable=False)
+
+    single_use = Column(Boolean, nullable=False, default=True)
+
+    used = Column(Boolean, nullable=False, default=False)
+
+    status = Column(
+        String,
+        nullable=False,
+        default="active"
+    )
