@@ -124,7 +124,7 @@ Every write to `Order` or `PaymentMandate` should be preceded by an `AuditEvent`
 
 ### Phase 6 — Polish + pitch prep (Days 11–12)
 - Record the 5-minute pitch: 1 successful run end-to-end, 1 deliberate failure handled gracefully, and 60 seconds walking through the architecture diagram + audit trail.
-- Clean up the public repo: README with architecture diagram, setup instructions, and a note on test-mode credentials (never commit live keys, obviously use test keys only).
+- Clean up the public repo: README with architecture diagram, setup instructions, and a note on test-mode credentials (never commit live keys, obviously use test keys only).   
 
 ---
 

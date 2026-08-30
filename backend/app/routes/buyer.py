@@ -1,8 +1,14 @@
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..schemas import (
+    BuyerRunRequest,
+    BuyerRunResponse,
+    AuditEventResponse,
+)
+from ..agent.orchestrator import run_buyer_orchestration
+from ..agent.audit import get_audit_events_by_session, get_recent_audit_sessions
 from ..agent.intent import parse_intent
 from ..agent.buyer import discover_products
 
@@ -13,38 +19,65 @@ router = APIRouter(
 )
 
 
-class BuyerRequest(BaseModel):
-    message: str
-
-
-@router.post("/run")
+@router.post("/run", response_model=BuyerRunResponse)
 def run_buyer_agent(
-    request: BuyerRequest,
+    request: BuyerRunRequest,
     db: Session = Depends(get_db),
 ):
-    # --------------------------------------------------
-    # STEP 1: Convert natural language into a mandate
-    # --------------------------------------------------
-
-    mandate = parse_intent(
-        request.message
-    )
-
-    # --------------------------------------------------
-    # STEP 2: Run deterministic buyer engine
-    # --------------------------------------------------
-
-    result = discover_products(
+    """
+    Execute full end-to-end Buyer Agent pipeline:
+    Intent Parsing -> Discovery & Scoring -> Inventory Check & Failure Recovery ->
+    PaymentMandate Generation -> Razorpay Order & Link -> Audit Trail.
+    """
+    result = run_buyer_orchestration(
         db=db,
-        mandate=mandate,
+        user_message=request.message,
+        simulate_failure=request.simulate_failure,
+        max_retries_override=request.max_retries,
     )
+    return result
 
-    # --------------------------------------------------
-    # STEP 3: Return complete audit-friendly response
-    # --------------------------------------------------
 
+@router.post("/discover")
+def discover_only(
+    request: BuyerRunRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Lightweight endpoint for constraint discovery and scoring without placing orders.
+    """
+    mandate = parse_intent(request.message)
+    result = discover_products(db=db, mandate=mandate)
     return {
         "request": request.message,
         "mandate": mandate.model_dump(mode="json"),
         "result": result,
     }
+
+
+@router.get("/audit/{session_id}", response_model=list[AuditEventResponse])
+def get_session_audit_trail(
+    session_id: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieve full chronological audit trail for a specific buyer agent session.
+    """
+    events = get_audit_events_by_session(db=db, session_id=session_id)
+    if not events:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No audit trail found for session {session_id}"
+        )
+    return events
+
+
+@router.get("/audit")
+def list_recent_sessions(
+    limit: int = 20,
+    db: Session = Depends(get_db),
+):
+    """
+    List recent buyer agent sessions with event counts and status.
+    """
+    return get_recent_audit_sessions(db=db, limit=limit)

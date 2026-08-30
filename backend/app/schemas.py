@@ -66,3 +66,44 @@ class PaymentLinkResponse(BaseModel):
     amount: float
     currency: str
     status: str
+
+
+class ProductStockUpdate(BaseModel):
+    stock: int
+
+
+class AuditEventResponse(BaseModel):
+    id: int
+    session_id: str
+    timestamp: str
+    actor: str
+    action: str
+    status: str
+    mandate_ref: str | None = None
+    reasoning: str
+    input_data: dict | list | None = None
+    output_data: dict | list | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class BuyerRunRequest(BaseModel):
+    message: str
+    simulate_failure: str | None = None
+    max_retries: int | None = None
+
+
+class BuyerRunResponse(BaseModel):
+    session_id: str
+    status: str
+    message: str
+    mandate: dict
+    retries_used: int
+    max_retries: int
+    failure_handled: dict | None = None
+    selected_product: dict | None = None
+    payment_mandate: dict | None = None
+    razorpay_order: dict | None = None
+    payment_link: str | None = None
+    audit_trail: list[dict] = []

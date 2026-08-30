@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import PaymentMandate, Product
+from ..agent.audit import log_audit_event
 from ..schemas import (
     PaymentMandateCreate,
     PaymentMandateResponse,
@@ -23,6 +24,7 @@ from ..schemas import (
     PaymentLinkCreate,
     PaymentLinkResponse,
 )
+
 
 
 # ---------------------------------------------------------
@@ -157,15 +159,11 @@ def validate_payment_mandate(
     )
 
     if not mandate:
-        print(
-            f"Webhook ignored: payment mandate not found "
-            f"for Razorpay order {razorpay_order_id}"
+        raise HTTPException(
+            status_code=404,
+            detail=f"Payment mandate {mandate_id} not found"
         )
 
-        return {
-            "status": "ignored",
-            "reason": "Payment mandate not found"
-        }
 
     # Single-use enforcement
     if mandate.used:
@@ -572,11 +570,12 @@ async def razorpay_webhook(
                 f"for Razorpay order {razorpay_order_id}"
             )
 
-        return {
-            "status": "ignored",
-            "reason": "No payment mandate found for Razorpay order",
-            "razorpay_order_id": razorpay_order_id,
-        }
+            return {
+                "status": "ignored",
+                "reason": "No payment mandate found for Razorpay order",
+                "razorpay_order_id": razorpay_order_id,
+            }
+
         # -------------------------------------------------
         # Idempotency
         #
@@ -669,6 +668,25 @@ async def razorpay_webhook(
 
         db.commit()
         db.refresh(mandate)
+
+        log_audit_event(
+            db=db,
+            session_id=f"session_{mandate.order_ref}",
+            actor="razorpay",
+            action="PAYMENT_CONFIRMED",
+            status="SUCCESS",
+            mandate_ref=mandate.order_ref,
+            reasoning=(
+                f"Webhook verified signature and confirmed payment of "
+                f"₹{mandate.amount:.0f} (Payment ID: {razorpay_payment_id})."
+            ),
+            output_data={
+                "razorpay_payment_id": razorpay_payment_id,
+                "razorpay_order_id": razorpay_order_id,
+                "amount": mandate.amount,
+            },
+        )
+
 
         return {
             "status": "payment_confirmed",

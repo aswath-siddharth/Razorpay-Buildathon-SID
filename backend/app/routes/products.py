@@ -37,3 +37,32 @@ def get_product(
         )
 
     return product
+
+
+@router.patch("/{product_id}/stock", response_model=ProductResponse)
+def update_product_stock(
+    product_id: int,
+    stock: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Update live inventory for a product.
+    Allows judges and testers to trigger out-of-stock failure directly in DB.
+    """
+    product = (
+        db.query(Product)
+        .filter(Product.id == product_id)
+        .first()
+    )
+
+    if not product:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    product.stock = max(0, stock)
+    db.commit()
+    db.refresh(product)
+
+    return product

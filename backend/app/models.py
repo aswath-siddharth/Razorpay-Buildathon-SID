@@ -83,3 +83,18 @@ class PaymentMandate(Base):
         nullable=False,
         default="active"
     )
+
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String, index=True, nullable=False)
+    timestamp = Column(String, nullable=False)
+    actor = Column(String, nullable=False)
+    action = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="INFO")
+    mandate_ref = Column(String, nullable=True)
+    reasoning = Column(String, nullable=False)
+    input_data = Column(JSON, nullable=True)
+    output_data = Column(JSON, nullable=True)
