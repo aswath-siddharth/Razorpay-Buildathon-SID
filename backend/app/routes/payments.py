@@ -2,6 +2,9 @@ from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 import os
 
+import hmac
+import hashlib
+import json
 import razorpay
 from dotenv import load_dotenv
 from fastapi import (
@@ -14,7 +17,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import PaymentMandate, Product
+from ..models import PaymentMandate, Product, AuditEvent
 from ..agent.audit import log_audit_event
 from ..schemas import (
     PaymentMandateCreate,
@@ -23,6 +26,7 @@ from ..schemas import (
     RazorpayOrderResponse,
     PaymentLinkCreate,
     PaymentLinkResponse,
+    SimulateWebhookRequest,
 )
 
 
@@ -669,9 +673,18 @@ async def razorpay_webhook(
         db.commit()
         db.refresh(mandate)
 
+        # Associate webhook event with the session that originated this mandate
+        original_event = (
+            db.query(AuditEvent)
+            .filter(AuditEvent.mandate_ref == mandate.order_ref)
+            .order_by(AuditEvent.id.asc())
+            .first()
+        )
+        target_session_id = original_event.session_id if original_event else f"session_{mandate.order_ref}"
+
         log_audit_event(
             db=db,
-            session_id=f"session_{mandate.order_ref}",
+            session_id=target_session_id,
             actor="razorpay",
             action="PAYMENT_CONFIRMED",
             status="SUCCESS",
@@ -764,3 +777,159 @@ async def razorpay_webhook(
         "status": "ignored",
         "event": event
     }
+
+
+# =========================================================
+# SIMULATE RAZORPAY WEBHOOK (FOR LIVE PITCH DEMOS)
+# =========================================================
+
+@router.post("/simulate-webhook")
+def simulate_webhook(
+    request: SimulateWebhookRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Simulate an authentic Razorpay Webhook delivery with cryptographic HMAC-SHA256
+    signature computation and server-side verification.
+    Ideal for pitch demos to prove payment confirmation without third-party tunnels.
+    """
+    # 1. Resolve target mandate
+    mandate = None
+    if request.mandate_id:
+        mandate = db.query(PaymentMandate).filter(PaymentMandate.id == request.mandate_id).first()
+    elif request.razorpay_order_id:
+        mandate = db.query(PaymentMandate).filter(PaymentMandate.razorpay_order_id == request.razorpay_order_id).first()
+    elif request.session_id:
+        # Find mandate from session audit trail
+        session_event = (
+            db.query(AuditEvent)
+            .filter(AuditEvent.session_id == request.session_id, AuditEvent.mandate_ref.isnot(None))
+            .first()
+        )
+        if session_event and session_event.mandate_ref:
+            mandate = db.query(PaymentMandate).filter(PaymentMandate.order_ref == session_event.mandate_ref).first()
+
+    if not mandate:
+        raise HTTPException(
+            status_code=404,
+            detail="No matching payment mandate found for webhook simulation"
+        )
+
+    # 2. Synthesize official Razorpay payment.captured webhook payload
+    amount_paise = int(round(mandate.amount * 100))
+    simulated_payment_id = f"pay_test_{uuid4().hex[:14]}"
+    order_id = mandate.razorpay_order_id or f"order_sim_{uuid4().hex[:14]}"
+
+    payload_dict = {
+        "entity": "event",
+        "account_id": "acc_buildathon_demo",
+        "event": "payment.captured",
+        "contains": ["payment"],
+        "payload": {
+            "payment": {
+                "entity": {
+                    "id": simulated_payment_id,
+                    "entity": "payment",
+                    "amount": amount_paise,
+                    "currency": "INR",
+                    "status": "captured",
+                    "order_id": order_id,
+                    "invoice_id": None,
+                    "international": False,
+                    "method": "upi",
+                    "amount_refunded": 0,
+                    "refund_status": None,
+                    "captured": True,
+                    "description": f"AI Buyer Purchase - {mandate.order_ref}",
+                    "card_id": None,
+                    "bank": None,
+                    "wallet": None,
+                    "vpa": "testbuyer@razorpay",
+                    "email": "buyer@example.com",
+                    "contact": "+919876543210",
+                    "fee": 540,
+                    "tax": 82,
+                    "error_code": None,
+                    "error_description": None,
+                    "created_at": int(datetime.now(timezone.utc).timestamp()),
+                }
+            }
+        },
+        "created_at": int(datetime.now(timezone.utc).timestamp()),
+    }
+
+    raw_body_bytes = json.dumps(payload_dict, separators=(",", ":")).encode("utf-8")
+
+    # 3. Compute cryptographic HMAC-SHA256 signature
+    secret_key = RAZORPAY_WEBHOOK_SECRET
+    if request.simulate_invalid_signature:
+        computed_signature = "invalid_tampered_signature_hex"
+    else:
+        computed_signature = hmac.new(
+            secret_key.encode("utf-8"),
+            raw_body_bytes,
+            hashlib.sha256
+        ).hexdigest()
+
+    # 4. Verify signature via official Razorpay utility
+    try:
+        razorpay_client.utility.verify_webhook_signature(
+            raw_body_bytes.decode("utf-8"),
+            computed_signature,
+            secret_key
+        )
+        signature_verified = True
+    except Exception as exc:
+        signature_verified = False
+        log_audit_event(
+            db=db,
+            session_id=request.session_id or f"session_{mandate.order_ref}",
+            actor="webhook",
+            action="SIGNATURE_VERIFICATION_FAILED",
+            status="FAILED",
+            mandate_ref=mandate.order_ref,
+            reasoning=f"Rejected webhook: Cryptographic signature mismatch. Error: {str(exc)}",
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=f"Webhook signature verification failed: {str(exc)}"
+        )
+
+    # 5. Process validated payment state update
+    mandate.used = True
+    mandate.status = "paid"
+    db.commit()
+    db.refresh(mandate)
+
+    # 6. Log audit event
+    session_id_to_log = request.session_id or f"session_{mandate.order_ref}"
+    log_audit_event(
+        db=db,
+        session_id=session_id_to_log,
+        actor="razorpay",
+        action="PAYMENT_CONFIRMED",
+        status="SUCCESS",
+        mandate_ref=mandate.order_ref,
+        reasoning=(
+            f"Webhook verified signature and confirmed payment of "
+            f"₹{mandate.amount:.0f} (Payment ID: {simulated_payment_id})."
+        ),
+        output_data={
+            "razorpay_payment_id": simulated_payment_id,
+            "razorpay_order_id": order_id,
+            "amount": mandate.amount,
+            "signature_verified": signature_verified,
+        },
+    )
+
+    return {
+        "status": "payment_confirmed",
+        "signature_verified": True,
+        "mandate_id": mandate.id,
+        "order_ref": mandate.order_ref,
+        "razorpay_order_id": order_id,
+        "razorpay_payment_id": simulated_payment_id,
+        "amount": mandate.amount,
+        "currency": "INR",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }

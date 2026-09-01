@@ -106,4 +106,11 @@ class BuyerRunResponse(BaseModel):
     payment_mandate: dict | None = None
     razorpay_order: dict | None = None
     payment_link: str | None = None
-    audit_trail: list[dict] = []
+    audit_trail: list[dict] = []
+
+
+class SimulateWebhookRequest(BaseModel):
+    session_id: str | None = None
+    razorpay_order_id: str | None = None
+    mandate_id: int | None = None
+    simulate_invalid_signature: bool = False

@@ -7,10 +7,20 @@ from seed import seed_database
 Base.metadata.create_all(bind=engine)
 
 seed_database()
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
     title="AI Buyer API",
     description="Agent-readable merchant catalog for AI Buyer",
     version="0.1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
