@@ -87,8 +87,8 @@ export default function ConfirmationCard({
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff' }}>
-                Purchase Safely Aborted (₹0 Funds Charged)
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                Purchase Safely Aborted (Rs 0 Funds Charged)
               </h3>
               <span className="badge badge-fail">Mandate Defense Active</span>
             </div>
@@ -96,7 +96,7 @@ export default function ConfirmationCard({
               {message}
             </p>
             <div className="glass-panel" style={{ padding: '12px 16px', fontSize: '0.8rem', color: 'var(--text-secondary)', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
-              <strong style={{ color: '#ffffff' }}>Mandate Safety Guarantee:</strong> Zero authorization tokens were issued. The orchestrator stopped execution immediately when bounds were exceeded.
+              <strong style={{ color: 'var(--text-primary)' }}>Mandate Safety Guarantee:</strong> Zero authorization tokens were issued. The orchestrator stopped execution immediately when bounds were exceeded.
             </div>
           </div>
         </div>
@@ -132,8 +132,8 @@ export default function ConfirmationCard({
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff' }}>
-                {isPaid ? 'Payment Confirmed & HMAC-SHA256 Verified' : 'Order Authorized — Ready for Checkout'}
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                {isPaid ? 'Payment Confirmed & HMAC-SHA256 Verified' : 'Order Authorized - Ready for Checkout'}
               </h3>
               <span className={`badge ${isPaid ? 'badge-success' : 'badge-info'}`}>
                 {isPaid ? 'Webhook Signature Verified' : 'Mandate Bound'}
@@ -148,8 +148,8 @@ export default function ConfirmationCard({
         {/* Amount Pill */}
         <div style={{ textAlign: 'right' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}>Mandate Amount:</span>
-          <span style={{ fontSize: '1.5rem', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.02em' }}>
-            ₹{payment_mandate?.amount?.toLocaleString('en-IN')}
+          <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            Rs {payment_mandate?.amount?.toLocaleString('en-IN')}
           </span>
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function ConfirmationCard({
             <RotateCcw size={17} />
             <span>Graceful Failure Recovery Executed (Retry {retries_used} of {max_retries})</span>
           </div>
-          <p style={{ fontSize: '0.84rem', color: '#e2e8f0', marginBottom: '12px', lineHeight: 1.4 }}>
+          <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: 1.4 }}>
             {failure_handled.reason}
           </p>
           
@@ -179,11 +179,11 @@ export default function ConfirmationCard({
               <div style={{ fontSize: '0.72rem', color: '#f87171', fontWeight: 700, marginBottom: '2px' }}>
                 FAILED CANDIDATE
               </div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {failure_handled.failed_candidate?.title}
               </div>
               <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                ₹{failure_handled.failed_candidate?.price} · {failure_handled.failed_candidate?.merchant}
+                Rs {failure_handled.failed_candidate?.price} - {failure_handled.failed_candidate?.merchant}
               </div>
             </div>
 
@@ -194,11 +194,11 @@ export default function ConfirmationCard({
               <div style={{ fontSize: '0.72rem', color: '#34d399', fontWeight: 700, marginBottom: '2px' }}>
                 FALLBACK SECURED
               </div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {failure_handled.fallback_to?.title}
               </div>
               <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
-                ₹{failure_handled.fallback_to?.price} · {failure_handled.fallback_to?.merchant} (Score: {failure_handled.fallback_to?.score})
+                Rs {failure_handled.fallback_to?.price} - {failure_handled.fallback_to?.merchant} (Score: {failure_handled.fallback_to?.score})
               </div>
             </div>
 
@@ -208,7 +208,7 @@ export default function ConfirmationCard({
 
       {/* Selected Product Hero Details */}
       <div style={{
-        background: 'rgba(11, 16, 30, 0.75)',
+        background: 'rgba(0, 102, 255, 0.04)',
         border: '1px solid var(--border-subtle)',
         borderRadius: '14px',
         padding: '16px',
@@ -224,7 +224,7 @@ export default function ConfirmationCard({
           height: '110px',
           borderRadius: '10px',
           overflow: 'hidden',
-          background: '#070a12',
+          background: '#eef4ff',
           position: 'relative'
         }}>
           <img 
@@ -233,7 +233,7 @@ export default function ConfirmationCard({
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
           <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.68rem', color: '#ffffff', fontWeight: 700 }}>
-            ₹{selected_product?.price?.toLocaleString('en-IN')}
+            Rs {selected_product?.price?.toLocaleString('en-IN')}
           </div>
         </div>
 
@@ -254,7 +254,7 @@ export default function ConfirmationCard({
             </div>
           </div>
 
-          <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>
+          <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
             {selected_product?.title}
           </h4>
 
@@ -268,7 +268,7 @@ export default function ConfirmationCard({
             </div>
             {mandate?.size && (
               <div>
-                Mandate Size: <strong style={{ color: '#ffffff' }}>{mandate.size}</strong>
+                Mandate Size: <strong style={{ color: 'var(--text-primary)' }}>{mandate.size}</strong>
               </div>
             )}
           </div>
@@ -286,7 +286,7 @@ export default function ConfirmationCard({
           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px' }}>
             <Lock size={12} color="var(--accent-cyan)" /> Mandate Scope:
           </div>
-          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
             Single-Use Scoped Token
           </div>
         </div>

@@ -37,11 +37,11 @@ export default function ArchitectureModal({ isOpen, onClose }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Layers size={22} color="var(--accent-cyan)" />
             <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 AI Buyer Architecture & Pitch Reference
               </h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Razorpay AI Buildathon — Track 01: Bounded Autonomous Commerce
+                Razorpay AI Buildathon - Track 01: Bounded Autonomous Commerce
               </p>
             </div>
           </div>
@@ -70,7 +70,7 @@ export default function ArchitectureModal({ isOpen, onClose }) {
               <span>Mandate-Gated State Machine Pipeline</span>
             </h4>
             <div style={{
-              background: '#070a12',
+              background: '#07142f',
               padding: '16px',
               borderRadius: '8px',
               fontFamily: 'var(--font-mono)',
@@ -83,7 +83,7 @@ export default function ArchitectureModal({ isOpen, onClose }) {
 {`User Query (Natural Language)
    │
    ▼
-[Intent Mandate] (Set once: budget ceiling ₹3000, size 9, ETA, max_retries)
+[Intent Mandate] (Set once: budget ceiling Rs 3000, size 9, ETA, max_retries)
    │ (Bounds all downstream actions)
    ▼
 [Buyer Agent Orchestrator] ──► Multi-Merchant Catalog Query & Deterministic Scoring
@@ -121,7 +121,7 @@ export default function ArchitectureModal({ isOpen, onClose }) {
                 <span>2. Bounded Retries & Fallback</span>
               </div>
               <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
-                When mid-flow stockouts or price surges occur, the agent retries up to <code>max_retries</code> to find the next-best candidate, or safely aborts charging ₹0.
+                When mid-flow stockouts or price surges occur, the agent retries up to <code>max_retries</code> to find the next-best candidate, or safely aborts charging Rs 0.
               </p>
             </div>
 
@@ -138,8 +138,8 @@ export default function ArchitectureModal({ isOpen, onClose }) {
           </div>
 
           {/* Pitch Narrative / Convergence Context */}
-          <div className="glass-panel" style={{ padding: '18px', background: 'rgba(12, 17, 30, 0.75)', border: '1px solid var(--border-medium)' }}>
-            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#ffffff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div className="glass-panel" style={{ padding: '18px', background: '#ffffff', border: '1px solid var(--border-medium)' }}>
+            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Award size={16} color="#c084fc" />
               <span>Global Industry Convergence & India's Rails (Pitch Context)</span>
             </h4>

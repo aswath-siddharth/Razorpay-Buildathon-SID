@@ -85,7 +85,7 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Database size={22} color="var(--accent-cyan)" />
             <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                 Multi-Merchant Database Catalog ({products.length} Items)
               </h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -147,7 +147,7 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
                     
                     {/* Thumbnail & Badges */}
                     <div style={{ display: 'flex', gap: '12px' }}>
-                      <div style={{ width: '80px', height: '70px', borderRadius: '8px', overflow: 'hidden', background: '#0b0f19', flexShrink: 0 }}>
+                      <div style={{ width: '80px', height: '70px', borderRadius: '8px', overflow: 'hidden', background: '#eef4ff', flexShrink: 0 }}>
                         <img src={img} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -155,11 +155,11 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
                           <span className="badge badge-info" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
                             ID #{item.id}
                           </span>
-                          <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>
-                            ₹{item.price?.toLocaleString('en-IN')}
+                          <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                            Rs {item.price?.toLocaleString('en-IN')}
                           </span>
                         </div>
-                        <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#ffffff', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {item.title}
                         </h4>
                         <div style={{ fontSize: '0.74rem', color: 'var(--accent-cyan)' }}>
@@ -169,7 +169,7 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
                     </div>
 
                     {/* Stock & ETA Controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'rgba(8, 12, 22, 0.6)', padding: '6px 10px', borderRadius: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'rgba(0, 102, 255, 0.04)', padding: '6px 10px', borderRadius: '6px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <Truck size={13} color="var(--accent-cyan)" />
                         <span>ETA: {item.delivery_eta}</span>
@@ -186,7 +186,7 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
                             borderRadius: '4px',
                             width: '18px',
                             height: '18px',
-                            color: '#ffffff',
+                            color: 'var(--text-primary)',
                             cursor: 'pointer',
                           }}
                         >
@@ -204,7 +204,7 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
                             borderRadius: '4px',
                             width: '18px',
                             height: '18px',
-                            color: '#ffffff',
+                            color: 'var(--text-primary)',
                             cursor: 'pointer',
                           }}
                         >

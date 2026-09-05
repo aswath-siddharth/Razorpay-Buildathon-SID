@@ -85,7 +85,7 @@ export default function AuditTrailTimeline({ events = [], sessionId }) {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
             <FileText size={20} color="var(--accent-cyan)" />
-            <h2 style={{ fontSize: '1.18rem', fontWeight: 800, color: '#ffffff' }}>
+            <h2 style={{ fontSize: '1.18rem', fontWeight: 800, color: 'var(--text-primary)' }}>
               Append-Only Audit Trail
             </h2>
             <span className="badge badge-mandate" style={{ fontSize: '0.72rem' }}>
@@ -136,7 +136,7 @@ export default function AuditTrailTimeline({ events = [], sessionId }) {
             style={{
               background: filterActor === f.id ? 'rgba(0, 186, 242, 0.2)' : 'rgba(255, 255, 255, 0.04)',
               border: filterActor === f.id ? '1px solid var(--accent-cyan)' : '1px solid var(--border-subtle)',
-              color: filterActor === f.id ? '#ffffff' : 'var(--text-secondary)',
+              color: filterActor === f.id ? 'var(--accent-blue)' : 'var(--text-secondary)',
               borderRadius: '9999px',
               padding: '4px 12px',
               fontSize: '0.74rem',
@@ -192,14 +192,14 @@ export default function AuditTrailTimeline({ events = [], sessionId }) {
                 <div className="glass-panel" style={{
                   padding: '14px 16px',
                   border: ev.status === 'RETRYING' ? '1px solid rgba(245, 158, 11, 0.35)' : ev.status === 'FAILED' ? '1px solid rgba(239, 68, 68, 0.35)' : '1px solid var(--border-subtle)',
-                  background: 'rgba(12, 17, 30, 0.75)',
+                  background: '#ffffff',
                 }}>
                   
                   {/* Node Header */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       {getActorIcon(ev.actor)}
-                      <span className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ffffff' }}>
+                      <span className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                         {ev.action}
                       </span>
                       {getStatusBadge(ev.status)}
@@ -211,7 +211,7 @@ export default function AuditTrailTimeline({ events = [], sessionId }) {
                   </div>
 
                   {/* Reasoning Text */}
-                  <p style={{ fontSize: '0.82rem', color: '#cbd5e1', lineHeight: 1.45, marginBottom: hasData ? '8px' : '0' }}>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.45, marginBottom: hasData ? '8px' : '0' }}>
                     {ev.reasoning}
                   </p>
 
@@ -249,7 +249,7 @@ export default function AuditTrailTimeline({ events = [], sessionId }) {
                       {isExpanded && (
                         <div style={{
                           marginTop: '8px',
-                          background: '#070a12',
+                          background: '#07142f',
                           borderRadius: '8px',
                           padding: '10px 12px',
                           border: '1px solid var(--border-subtle)',

@@ -22,7 +22,7 @@ export default function PromptStudio({
   customInitialPrompt
 }) {
   const [prompt, setPrompt] = useState(
-    customInitialPrompt || "Buy me running shoes under ₹3,000, size 9, that can arrive by Friday."
+    customInitialPrompt || "Buy me running shoes under Rs 3,000, size 9, that can arrive by Friday."
   );
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [maxRetries, setMaxRetries] = useState(2);
@@ -38,33 +38,33 @@ export default function PromptStudio({
   const scenarios = [
     {
       id: "happy-path",
-      title: "🏃‍♂️ Happy Path (End-to-End)",
+      title: "Happy Path (End-to-End)",
       desc: "Full automated purchase within budget, size & ETA bounds",
-      query: "Buy me running shoes under ₹3000, size 9, arrive by Friday",
+      query: "Buy me running shoes under Rs 3000, size 9, arrive by Friday",
       failure: "none",
       retries: 2,
     },
     {
       id: "stockout-recovery",
-      title: "🛡️ Mid-Flow Stockout Recovery",
+      title: "Mid-Flow Stockout Recovery",
       desc: "Rank #1 goes out of stock; agent falls back to Rank #2 seamlessly",
-      query: "Buy me running shoes under ₹3000, size 9, arrive by Friday",
+      query: "Buy me running shoes under Rs 3000, size 9, arrive by Friday",
       failure: "out_of_stock",
       retries: 2,
     },
     {
       id: "price-mismatch",
-      title: "⚠️ Price Surge Protection",
+      title: "Price Surge Protection",
       desc: "Checkout price jumps above budget; mandate rejects & retries",
-      query: "Buy me running shoes under ₹3000, size 9, arrive by Friday",
+      query: "Buy me running shoes under Rs 3000, size 9, arrive by Friday",
       failure: "price_mismatch",
       retries: 2,
     },
     {
       id: "retries-exhausted",
-      title: "🛑 Retries Exhausted (Safe Abort)",
-      desc: "Max retries = 0; aborts gracefully with ₹0 charged",
-      query: "Buy me running shoes under ₹3000, size 9, arrive by Friday",
+      title: "Retries Exhausted (Safe Abort)",
+      desc: "Max retries = 0; aborts gracefully with Rs 0 charged",
+      query: "Buy me running shoes under Rs 3000, size 9, arrive by Friday",
       failure: "out_of_stock",
       retries: 0,
     },
@@ -125,7 +125,7 @@ export default function PromptStudio({
             <Zap size={18} color="var(--accent-cyan)" />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.18rem', fontWeight: 800, color: '#ffffff' }}>
+            <h2 style={{ fontSize: '1.18rem', fontWeight: 800, color: 'var(--text-primary)' }}>
               Buyer Agent Prompt Studio
             </h2>
             <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
@@ -134,7 +134,7 @@ export default function PromptStudio({
           </div>
         </div>
         <span className="badge badge-info" style={{ fontSize: '0.72rem' }}>
-          Natural Language → Bounded Action
+          Natural Language to Bounded Action
         </span>
       </div>
 
@@ -156,7 +156,7 @@ export default function PromptStudio({
                 cursor: isRunning ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s ease',
                 border: '1px solid var(--border-subtle)',
-                background: 'rgba(12, 17, 30, 0.7)',
+                background: '#ffffff',
                 opacity: isRunning ? 0.6 : 1,
               }}
               onMouseEnter={(e) => {
@@ -172,7 +172,7 @@ export default function PromptStudio({
                 }
               }}
             >
-              <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
+              <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
                 {sc.title}
               </div>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
@@ -194,7 +194,7 @@ export default function PromptStudio({
             className="input-text"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="e.g. Buy me running shoes under ₹3000, size 9, arrive by Friday..."
+            placeholder="e.g. Buy me running shoes under Rs 3000, size 9, arrive by Friday..."
             disabled={isRunning}
           />
           <button

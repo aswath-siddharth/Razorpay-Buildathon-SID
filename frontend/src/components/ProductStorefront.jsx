@@ -7,384 +7,425 @@ import {
   Star, 
   Truck, 
   Box, 
-  Filter, 
   RefreshCw, 
   Plus, 
   Minus, 
-  AlertCircle,
-  Tag,
-  ShieldCheck,
-  Check
+  Tag, 
+  Check, 
+  AlertCircle 
 } from 'lucide-react';
 
-export default function ProductStorefront({ onSelectProductForAgent, isAgentRunning }) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('ALL');
-  const [searchQuery, setSearchQuery] = useState('');
+const INITIAL_PRODUCTS = [
+  {
+    id: 1,
+    title: "Velocity Run 3 Neutral Trainer",
+    brand: "STRIDELINE",
+    category: "Running",
+    price: 2799,
+    originalPrice: 3999,
+    discount: "30% off",
+    rating: 4.4,
+    reviews: "2,184",
+    stock: 12,
+    eta: "Tomorrow",
+    sizes: [7, 8, 9, 10, 11],
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 2,
+    title: "TrailGrip Pro Off-Road Runner",
+    brand: "STRIDELINE",
+    category: "Running",
+    price: 3499,
+    originalPrice: 4599,
+    discount: "24% off",
+    rating: 4.6,
+    reviews: "908",
+    stock: 5,
+    eta: "in 2 days",
+    sizes: [8, 9, 10],
+    image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 3,
+    title: "CloudGlide Ultra Sprint Shoes",
+    brand: "AEROSTEP",
+    category: "Running",
+    price: 2899,
+    originalPrice: 3499,
+    discount: "17% off",
+    rating: 4.5,
+    reviews: "1,420",
+    stock: 9,
+    eta: "Tomorrow",
+    sizes: [7, 8, 9, 10],
+    image: "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 4,
+    title: "AirMatrix Flow Road Runner",
+    brand: "AEROSTEP",
+    category: "Running",
+    price: 2599,
+    originalPrice: 3699,
+    discount: "29% off",
+    rating: 4.3,
+    reviews: "640",
+    stock: 8,
+    eta: "Tomorrow",
+    sizes: [8, 9, 10, 11],
+    image: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 5,
+    title: "Apex Street Classic Low Sneakers",
+    brand: "URBANCRAFT",
+    category: "Sneakers",
+    price: 2499,
+    originalPrice: 3299,
+    discount: "24% off",
+    rating: 4.7,
+    reviews: "3,110",
+    stock: 15,
+    eta: "Tomorrow",
+    sizes: [7, 8, 9, 10],
+    image: "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 6,
+    title: "SoundCore Pro ANC Wireless Audio",
+    brand: "SONICPRO",
+    category: "Audio",
+    price: 2999,
+    originalPrice: 4999,
+    discount: "40% off",
+    rating: 4.8,
+    reviews: "4,502",
+    stock: 14,
+    eta: "Tomorrow",
+    sizes: ["Standard"],
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 7,
+    title: "AeroSport Lightweight Hydration Pack",
+    brand: "URBANCRAFT",
+    category: "Bags",
+    price: 1899,
+    originalPrice: 2499,
+    discount: "24% off",
+    rating: 4.5,
+    reviews: "780",
+    stock: 11,
+    eta: "in 2 days",
+    sizes: ["20L"],
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 8,
+    title: "Chronos GPS Smart Performance Watch",
+    brand: "HOROLOGE",
+    category: "Watches",
+    price: 2999,
+    originalPrice: 4299,
+    discount: "30% off",
+    rating: 4.7,
+    reviews: "1,890",
+    stock: 6,
+    eta: "Tomorrow",
+    sizes: ["44mm"],
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80"
+  }
+];
+
+export default function ProductStorefront({ 
+  onSelectProductForAgent,
+  isAgentRunning = false,
+  searchQuery = '',
+}) {
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [selectedCategory, setSelectedCategory] = useState('All products');
+  const [selectedPriceRange, setSelectedPriceRange] = useState('all');
   const [stockUpdatingId, setStockUpdatingId] = useState(null);
-  const [stockSuccessId, setStockSuccessId] = useState(null);
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const resp = await fetch('http://localhost:8000/products');
-      if (resp.ok) {
-        const data = await resp.json();
-        setProducts(data);
-      }
-    } catch (e) {
-      console.error("Failed to load storefront products", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateStock = async (productId, newStock) => {
-    setStockUpdatingId(productId);
-    try {
-      const resp = await fetch(`http://localhost:8000/products/${productId}/stock?stock=${Math.max(0, newStock)}`, {
-        method: 'PATCH',
-      });
-      if (resp.ok) {
-        const updated = await resp.json();
-        setProducts(prev => prev.map(p => p.id === productId ? updated : p));
-        setStockSuccessId(productId);
-        setTimeout(() => setStockSuccessId(null), 1800);
-      }
-    } catch (e) {
-      console.error("Failed to update stock", e);
-    } finally {
-      setStockUpdatingId(null);
-    }
-  };
 
   const categories = [
-    { id: 'ALL', label: '🔥 All Drops' },
-    { id: 'running_shoes', label: '👟 Running Shoes' },
-    { id: 'headphones', label: '🎧 Wireless Audio' },
-    { id: 'smartwatch', label: '⌚ Smartwatches' },
+    { id: 'All products', label: 'All products' },
+    { id: 'Running', label: 'Running' },
+    { id: 'Sneakers', label: 'Sneakers' },
+    { id: 'Audio', label: 'Audio' },
+    { id: 'Bags', label: 'Bags' },
+    { id: 'Watches', label: 'Watches' },
   ];
 
+  const priceRanges = [
+    { id: 'all', label: 'All prices' },
+    { id: 'under_2000', label: 'Under ₹2,000' },
+    { id: '2000_3000', label: '₹2,000 – ₹3,000' },
+    { id: '3000_5000', label: '₹3,000 – ₹5,000' },
+  ];
+
+  const handleStockAdjust = (productId, delta) => {
+    setStockUpdatingId(productId);
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId) {
+        const newStock = Math.max(0, p.stock + delta);
+        return { ...p, stock: newStock };
+      }
+      return p;
+    }));
+    setTimeout(() => setStockUpdatingId(null), 300);
+  };
+
+  const handleSetZeroStock = (productId) => {
+    setStockUpdatingId(productId);
+    setProducts(prev => prev.map(p => p.id === productId ? { ...p, stock: 0 } : p));
+    setTimeout(() => setStockUpdatingId(null), 300);
+  };
+
   const filteredProducts = products.filter(item => {
-    const itemCat = item.attributes?.category || 'running_shoes';
-    const matchesCat = activeCategory === 'ALL' || itemCat === activeCategory;
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.attributes?.brand || '').toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
+    const matchesCategory = selectedCategory === 'All products' || item.category === selectedCategory;
+    
+    let matchesPrice = true;
+    if (selectedPriceRange === 'under_2000') {
+      matchesPrice = item.price < 2000;
+    } else if (selectedPriceRange === '2000_3000') {
+      matchesPrice = item.price >= 2000 && item.price <= 3000;
+    } else if (selectedPriceRange === '3000_5000') {
+      matchesPrice = item.price > 3000 && item.price <= 5000;
+    }
+
+    const matchesSearch = !searchQuery.trim() || 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesCategory && matchesPrice && matchesSearch;
   });
 
   return (
-    <div className="glass-card" style={{ padding: '24px', marginBottom: '28px' }}>
+    <div className="storefront-layout">
       
-      {/* Storefront Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, rgba(0, 102, 255, 0.2) 0%, rgba(0, 186, 242, 0.2) 100%)',
-            border: '1px solid var(--border-glow)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <ShoppingBag size={22} color="var(--accent-cyan)" />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>
-                Live Autonomous Storefront
-              </h2>
-              <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>
-                {products.length} Verified Products
-              </span>
-            </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Real-time multi-merchant inventory with instant AI agent dispatch & stock test controls
-            </p>
+      {/* Left Sidebar: Categories & Price Filters */}
+      <aside>
+        
+        {/* Categories Section */}
+        <div className="sidebar-section">
+          <div className="sidebar-title">Categories</div>
+          <div className="sidebar-menu">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`sidebar-item ${selectedCategory === cat.id ? 'active' : ''}`}
+              >
+                <span>{cat.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Search Bar & Refresh */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ position: 'relative', width: '240px' }}>
-            <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '12px' }} />
-            <input
-              type="text"
-              placeholder="Search products or brands..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-text"
-              style={{ paddingLeft: '34px', paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px', fontSize: '0.82rem' }}
-            />
+        {/* Price Section */}
+        <div className="sidebar-section">
+          <div className="sidebar-title">Price</div>
+          <div className="sidebar-menu">
+            {priceRanges.map(pr => (
+              <button
+                key={pr.id}
+                onClick={() => setSelectedPriceRange(pr.id)}
+                className={`sidebar-item ${selectedPriceRange === pr.id ? 'active' : ''}`}
+              >
+                <span>{pr.label}</span>
+              </button>
+            ))}
           </div>
-          <button 
-            onClick={fetchProducts} 
-            className="btn btn-outline btn-sm"
-            title="Refresh Live DB Catalog"
-          >
-            <RefreshCw size={14} className={loading ? "spinner" : ""} />
-          </button>
         </div>
-      </div>
 
-      {/* Category Pills */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '22px', flexWrap: 'wrap' }}>
-        {categories.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-            className={`quick-chip ${activeCategory === cat.id ? 'active' : ''}`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
+        {/* Bounded Agent Indicator info card */}
+        <div style={{
+          background: 'var(--bg-subtle)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 14px',
+          fontSize: '0.74rem',
+          color: 'var(--text-secondary)',
+          lineHeight: 1.45,
+          marginTop: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 700, color: 'var(--accent-blue)', marginBottom: '4px' }}>
+            <Sparkles size={13} />
+            <span>Agent-Ready Catalog</span>
+          </div>
+          Every product exposes structured machine-readable constraints and single-use payment bounds.
+        </div>
 
-      {/* Product Cards Grid */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <RefreshCw size={32} className="spinner" color="var(--accent-cyan)" />
-          <p style={{ marginTop: '12px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-            Loading merchant catalogs & product images...
+      </aside>
+
+      {/* Main Product Grid Area */}
+      <main>
+        
+        {/* Header Title & Subtitle matching Meridian reference image */}
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
+            {selectedCategory}
+          </h1>
+          <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)' }}>
+            {filteredProducts.length} items · agent-ready checkout enabled on every listing
           </p>
         </div>
-      ) : filteredProducts.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
-          <AlertCircle size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
-          <p>No products match your search or filter criteria.</p>
-        </div>
-      ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: '18px',
-        }}>
-          {filteredProducts.map((item) => {
-            const itemImage = item.image_url || item.attributes?.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80';
-            const brand = item.attributes?.brand || 'Brand';
-            const rating = item.attributes?.rating || 4.7;
-            const reviewCount = item.attributes?.review_count || 320;
-            const sizes = item.attributes?.size || [8, 9, 10];
-            const isOutOfStock = item.stock <= 0;
-            const isUpdating = stockUpdatingId === item.id;
-            const isSuccess = stockSuccessId === item.id;
 
-            return (
-              <div key={item.id} className="product-card">
-                
-                {/* Product Image Box */}
-                <div className="product-image-container">
-                  <img 
-                    src={itemImage} 
-                    alt={item.title} 
-                    className="product-image"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80';
-                    }}
-                  />
-                  <div className="product-image-overlay" />
+        {/* Product Cards Grid */}
+        {filteredProducts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+            <AlertCircle size={36} style={{ marginBottom: '10px', opacity: 0.4 }} />
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)' }}>No items match your filter.</p>
+            <button 
+              onClick={() => { setSelectedCategory('All products'); setSelectedPriceRange('all'); }}
+              className="btn btn-outline btn-sm"
+              style={{ marginTop: '12px' }}
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <div className="products-grid">
+            {filteredProducts.map(product => {
+              const isOutOfStock = product.stock <= 0;
+              const isLowStock = product.stock > 0 && product.stock <= 5;
+
+              return (
+                <div key={product.id} className="meridian-product-card">
                   
-                  {/* Floating Brand & ID Badge */}
-                  <div style={{ position: 'absolute', top: '10px', left: '10px', display: 'flex', gap: '6px' }}>
-                    <span style={{
-                      background: 'rgba(8, 12, 22, 0.85)',
-                      backdropFilter: 'blur(8px)',
-                      color: '#ffffff',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      padding: '3px 9px',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(255, 255, 255, 0.12)'
-                    }}>
-                      {brand}
+                  {/* Top Image Box */}
+                  <div className="product-img-wrapper">
+                    <span className="discount-badge">
+                      {product.discount}
                     </span>
-                    <span style={{
-                      background: 'rgba(0, 186, 242, 0.2)',
-                      backdropFilter: 'blur(8px)',
-                      color: 'var(--accent-cyan)',
-                      fontSize: '0.68rem',
-                      fontWeight: 600,
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(0, 186, 242, 0.3)'
-                    }}>
-                      #{item.id}
-                    </span>
+
+                    <img 
+                      src={product.image} 
+                      alt={product.title} 
+                      className="product-img"
+                      loading="lazy"
+                    />
                   </div>
 
-                  {/* Stock Status Pill */}
-                  <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
-                    <span className={`badge ${isOutOfStock ? 'badge-fail' : item.stock < 5 ? 'badge-retry' : 'badge-success'}`} style={{ fontSize: '0.68rem' }}>
-                      {isOutOfStock ? 'Out of Stock' : `${item.stock} in stock`}
-                    </span>
-                  </div>
-
-                  {/* Price Banner Overlay */}
-                  <div style={{ position: 'absolute', bottom: '10px', left: '12px', right: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                      <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.02em' }}>
-                        ₹{item.price?.toLocaleString('en-IN')}
-                      </span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                        ₹{(item.price * 1.35).toFixed(0)}
-                      </span>
-                    </div>
-                    <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 700, background: 'rgba(16, 185, 129, 0.15)', padding: '2px 6px', borderRadius: '4px' }}>
-                      26% OFF
-                    </span>
-                  </div>
-                </div>
-
-                {/* Product Content */}
-                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
-                  
-                  <div>
-                    {/* Title */}
-                    <h3 style={{ fontSize: '0.98rem', fontWeight: 700, color: '#ffffff', marginBottom: '8px', lineHeight: 1.35 }}>
-                      {item.title}
-                    </h3>
-
-                    {/* Meta Rating & ETA */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Star size={13} color="#f59e0b" fill="#f59e0b" />
-                        <span style={{ color: '#ffffff', fontWeight: 700 }}>{rating}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>({reviewCount})</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent-cyan)' }}>
-                        <Truck size={13} />
-                        <span>ETA: {item.delivery_eta}</span>
-                      </div>
-                    </div>
-
-                    {/* Sizes / Specs */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Sizes:</span>
-                      {Array.isArray(sizes) && sizes.slice(0, 4).map((s, idx) => (
-                        <span key={idx} style={{
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid var(--border-subtle)',
-                          borderRadius: '4px',
-                          padding: '1px 6px',
-                          fontSize: '0.7rem',
-                          color: 'var(--text-primary)',
-                          fontWeight: 600,
-                        }}>
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Actions Bar: Buy with AI + Live Stock Adjuster */}
-                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {/* Product Details & Actions */}
+                  <div className="product-info-box">
                     
-                    {/* AI Agent Purchase CTA */}
-                    <button
-                      onClick={() => onSelectProductForAgent(item)}
-                      disabled={isAgentRunning}
-                      className="btn btn-cyan btn-sm"
-                      style={{ width: '100%', gap: '6px' }}
-                      title="Dispatch AI Agent to purchase this product with mandate bounds"
-                    >
-                      <Zap size={14} />
-                      <span>Buy with AI Agent</span>
-                    </button>
+                    <div>
+                      <div className="product-brand">{product.brand}</div>
+                      <h3 className="product-title">{product.title}</h3>
 
-                    {/* Live Stock Testing Controls for Judges */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      background: 'rgba(10, 14, 26, 0.6)',
-                      padding: '6px 10px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-subtle)',
-                      fontSize: '0.72rem',
-                    }}>
-                      <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Box size={12} /> Test Stock:
-                      </span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <button
-                          onClick={() => handleUpdateStock(item.id, item.stock - 1)}
-                          disabled={item.stock <= 0 || isUpdating}
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: 'none',
-                            borderRadius: '4px',
-                            width: '20px',
-                            height: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#ffffff',
-                            cursor: 'pointer',
-                          }}
-                          title="Decrease Stock (Test Failure)"
-                        >
-                          <Minus size={11} />
-                        </button>
-                        <span style={{ fontWeight: 700, minWidth: '18px', textAlign: 'center', color: isSuccess ? '#10b981' : '#ffffff' }}>
-                          {item.stock}
+                      {/* Rating row */}
+                      <div className="rating-row">
+                        <span className="rating-stars">
+                          {product.rating} <Star size={12} fill="#f59e0b" />
                         </span>
-                        <button
-                          onClick={() => handleUpdateStock(item.id, item.stock + 5)}
-                          disabled={isUpdating}
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: 'none',
-                            borderRadius: '4px',
-                            width: '20px',
-                            height: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#ffffff',
-                            cursor: 'pointer',
-                          }}
-                          title="Increase Stock (+5)"
-                        >
-                          <Plus size={11} />
-                        </button>
-                        <button
-                          onClick={() => handleUpdateStock(item.id, 0)}
-                          disabled={item.stock === 0 || isUpdating}
-                          style={{
-                            background: 'rgba(239, 68, 68, 0.15)',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            borderRadius: '4px',
-                            padding: '1px 6px',
-                            fontSize: '0.68rem',
-                            color: '#f87171',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            marginLeft: '4px',
-                          }}
-                          title="Set stock to 0 to simulate real out-of-stock mid-flow"
-                        >
-                          Make 0
-                        </button>
+                        <span className="rating-count">
+                          {product.reviews} ratings
+                        </span>
                       </div>
+
+                      {/* Price row */}
+                      <div className="price-row">
+                        <span className="price-current">
+                          ₹{product.price.toLocaleString('en-IN')}
+                        </span>
+                        <span className="price-original">
+                          ₹{product.originalPrice.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+
+                      {/* Stock & ETA Status */}
+                      <div className="meta-status-row">
+                        <span className={isOutOfStock ? 'stock-out' : isLowStock ? 'stock-low' : 'stock-in'}>
+                          {isOutOfStock ? 'OUT OF STOCK' : isLowStock ? `ONLY ${product.stock} LEFT` : 'IN STOCK'}
+                        </span>
+                        <span className="delivery-eta">
+                          <Truck size={13} /> {product.eta}
+                        </span>
+                      </div>
+
+                      {/* Sizes Row */}
+                      <div className="sizes-row">
+                        {Array.isArray(product.sizes) && product.sizes.map((s, idx) => (
+                          <span key={idx} className="size-pill">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action: Buy with AI Agent */}
+                    <div style={{ marginTop: '10px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      
+                      <button
+                        onClick={() => onSelectProductForAgent(product)}
+                        disabled={isAgentRunning || isOutOfStock}
+                        className="btn btn-primary btn-sm"
+                        style={{ width: '100%', gap: '6px' }}
+                        title="Dispatch AI Agent with bounded mandate for this item"
+                      >
+                        <Zap size={14} />
+                        <span>Buy with AI Agent</span>
+                      </button>
+
+                      {/* Live Stock Testing Controls for Judges */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontSize: '0.72rem',
+                        color: 'var(--text-muted)',
+                        background: 'var(--bg-subtle)',
+                        padding: '4px 8px',
+                        borderRadius: 'var(--radius-sm)'
+                      }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          <Box size={11} /> Stock ({product.stock}):
+                        </span>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            onClick={() => handleStockAdjust(product.id, -1)}
+                            disabled={product.stock <= 0}
+                            className="btn btn-outline btn-xs"
+                            style={{ padding: '2px 5px', fontSize: '0.68rem' }}
+                            title="Decrease Stock"
+                          >
+                            <Minus size={10} />
+                          </button>
+                          <button
+                            onClick={() => handleStockAdjust(product.id, 5)}
+                            className="btn btn-outline btn-xs"
+                            style={{ padding: '2px 5px', fontSize: '0.68rem' }}
+                            title="Add 5 items"
+                          >
+                            <Plus size={10} />
+                          </button>
+                          <button
+                            onClick={() => handleSetZeroStock(product.id)}
+                            disabled={product.stock === 0}
+                            className="btn btn-outline btn-xs"
+                            style={{ padding: '2px 5px', fontSize: '0.68rem', color: '#dc2626' }}
+                            title="Simulate stockout failure live"
+                          >
+                            Zero
+                          </button>
+                        </div>
+                      </div>
+
                     </div>
 
                   </div>
 
                 </div>
+              );
+            })}
+          </div>
+        )}
 
-              </div>
-            );
-          })}
-        </div>
-      )}
+      </main>
 
     </div>
   );

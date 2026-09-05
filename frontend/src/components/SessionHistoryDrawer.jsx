@@ -40,7 +40,7 @@ export default function SessionHistoryDrawer({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <History size={20} color="var(--accent-cyan)" />
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#ffffff' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
               Past Audit Sessions
             </h3>
           </div>
@@ -83,7 +83,7 @@ export default function SessionHistoryDrawer({
                     padding: '14px',
                     cursor: 'pointer',
                     border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid var(--border-subtle)',
-                    background: isSelected ? 'rgba(0, 186, 242, 0.12)' : 'rgba(12, 17, 30, 0.7)',
+                    background: isSelected ? 'rgba(0, 102, 255, 0.08)' : '#ffffff',
                     transition: 'all 0.2s ease',
                   }}
                   onMouseEnter={(e) => {
@@ -108,7 +108,7 @@ export default function SessionHistoryDrawer({
                     </span>
                   </div>
 
-                  <p style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: 1.35, marginBottom: '8px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.35, marginBottom: '8px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                     {sess.last_reasoning || sess.message || 'Session audit events logged.'}
                   </p>
 

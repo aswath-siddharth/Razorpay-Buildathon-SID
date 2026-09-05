@@ -1,130 +1,148 @@
 import React from 'react';
-import { ShieldCheck, Database, FileText, History, Sparkles, CheckCircle2, AlertCircle, ShoppingBag, ExternalLink, Lock } from 'lucide-react';
+import { 
+  Search, 
+  ShieldCheck, 
+  Layers, 
+  History, 
+  Database,
+  ExternalLink,
+  CheckCircle2,
+  Lock
+} from 'lucide-react';
 
 export default function Header({ 
-  backendStatus, 
-  onOpenCatalog, 
-  onOpenArchitecture, 
+  searchQuery, 
+  onSearchChange,
+  onOpenArchitecture,
+  onOpenCatalog,
   onOpenHistory,
-  sessionCount = 0,
-  onScrollToStorefront,
-  onScrollToStudio,
+  backendStatus = 'connected'
 }) {
   return (
-    <header className="glass-panel" style={{ 
-      padding: '14px 24px', 
-      marginBottom: '24px', 
-      position: 'sticky', 
-      top: '12px', 
-      zIndex: 50,
-      border: '1px solid var(--border-medium)',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 186, 242, 0.1)'
+    <header style={{
+      height: '64px',
+      background: 'var(--bg-surface)',
+      borderBottom: '1px solid var(--border-subtle)',
+      position: 'sticky',
+      top: 0,
+      zIndex: 30,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 24px',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+      
+      {/* Left: Brand Logo & Title */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         
-        {/* Brand & Track Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* Meridian Logo (matching reference image: black rounded box + 'M' + Meridian) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
           <div style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #0066FF 0%, #00BAF2 100%)',
+            width: '32px',
+            height: '32px',
+            background: '#0f172a',
+            color: '#ffffff',
+            borderRadius: '8px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 24px rgba(0, 186, 242, 0.45)',
-            position: 'relative'
+            fontWeight: 900,
+            fontSize: '1.05rem',
+            fontFamily: 'var(--font-heading)'
           }}>
-            <ShieldCheck size={26} color="#ffffff" />
-            <span style={{
-              position: 'absolute',
-              bottom: '-2px',
-              right: '-2px',
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-              backgroundColor: '#10b981',
-              border: '2px solid #08090d',
-              boxShadow: '0 0 8px #10b981'
-            }} className="live-dot" />
+            M
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.03em', fontFamily: 'var(--font-brand)' }}>
-                Razorpay <span style={{ color: 'var(--accent-cyan)' }}>AI Buyer</span>
-              </h1>
-              <span className="badge badge-razorpay" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
-                BUILDATHON 2026
-              </span>
-              <span className="badge badge-mandate" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
-                TRACK 01: AGENTIC COMMERCE
-              </span>
-            </div>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Explainable, Mandate-Bound Autonomous Purchasing on Razorpay Rails
-            </p>
-          </div>
+          <span style={{
+            fontSize: '1.25rem',
+            fontWeight: 800,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.02em',
+            fontFamily: 'var(--font-heading)'
+          }}>
+            Meridian
+          </span>
         </div>
 
-        {/* Action Controls & Navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          
-          {/* Backend Status Pill */}
-          <div className="glass-panel" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '6px 12px',
-            fontSize: '0.78rem',
-            borderRadius: '9999px',
-            border: backendStatus === 'connected' ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(239, 68, 68, 0.35)',
-            background: 'rgba(10, 14, 26, 0.7)'
-          }}>
-            {backendStatus === 'connected' ? (
-              <>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', boxShadow: '0 0 8px #10b981' }} className="live-dot" />
-                <span style={{ color: '#10b981', fontWeight: 600 }}>Razorpay Rails Connected</span>
-              </>
-            ) : (
-              <>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
-                <span style={{ color: '#ef4444', fontWeight: 600 }}>Connecting API (Port 8000)...</span>
-              </>
-            )}
-          </div>
+        {/* Razorpay Track Badge */}
+        <span className="badge badge-black" style={{ fontSize: '0.68rem', display: 'none' }}>
+          TRACK 01
+        </span>
+      </div>
 
-          {/* Architecture & Pitch Modal Button */}
-          <button 
-            className="btn btn-outline btn-sm"
-            onClick={onOpenArchitecture}
-            title="View Pitch Architecture & State Machine"
-          >
-            <FileText size={15} color="var(--accent-cyan)" />
-            <span>Architecture & Pitch</span>
-          </button>
+      {/* Center: Global Search Bar */}
+      <div style={{ flex: 1, maxWidth: '540px', margin: '0 24px' }}>
+        <div style={{ position: 'relative' }}>
+          <Search 
+            size={16} 
+            color="var(--text-muted)" 
+            style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} 
+          />
+          <input
+            type="text"
+            placeholder="Search shoes, audio, bags..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="input-text"
+            style={{
+              paddingLeft: '38px',
+              paddingRight: '14px',
+              paddingTop: '8px',
+              paddingBottom: '8px',
+              fontSize: '0.86rem',
+              borderRadius: 'var(--radius-pill)',
+              background: '#f8fafc',
+              border: '1px solid var(--border-subtle)'
+            }}
+          />
+        </div>
+      </div>
 
-          {/* Merchant Catalog Modal Button */}
-          <button 
-            className="btn btn-outline btn-sm"
-            onClick={onOpenCatalog}
-            title="Inspect Live Merchant Catalogs"
-          >
-            <Database size={15} color="#38bdf8" />
-            <span>DB Catalog</span>
-          </button>
+      {/* Right: Actions & Status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        
+        {/* Architecture Diagram Modal */}
+        <button
+          onClick={onOpenArchitecture}
+          className="btn btn-outline btn-sm"
+          style={{ fontSize: '0.78rem', gap: '5px' }}
+          title="Inspect End-to-End System Architecture"
+        >
+          <Layers size={14} color="var(--accent-blue)" />
+          <span style={{ display: 'inline' }}>Architecture</span>
+        </button>
 
-          {/* Past Sessions Drawer */}
-          <button 
-            className="btn btn-outline btn-sm"
-            onClick={onOpenHistory}
-            title="Inspect Past Audit Sessions"
-          >
-            <History size={15} color="#c084fc" />
-            <span>Audit Sessions ({sessionCount})</span>
-          </button>
+        {/* Audit Sessions History */}
+        <button
+          onClick={onOpenHistory}
+          className="btn btn-outline btn-sm"
+          style={{ fontSize: '0.78rem', gap: '5px' }}
+          title="View Historical Audit Logs"
+        >
+          <History size={14} />
+          <span>Audit Logs</span>
+        </button>
+
+        {/* Currency & Test Mode Pill */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'var(--bg-subtle)',
+          padding: '5px 10px',
+          borderRadius: 'var(--radius-pill)',
+          fontSize: '0.74rem',
+          fontWeight: 700,
+          color: 'var(--text-secondary)'
+        }}>
+          <span style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <CheckCircle2 size={12} /> Test Mode
+          </span>
+          <span>•</span>
+          <span>₹ INR</span>
         </div>
 
       </div>
+
     </header>
   );
 }
