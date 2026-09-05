@@ -436,6 +436,8 @@ export default function AIBuyerPanel({
   const [activeFailureScenario, setActiveFailureScenario] = useState('none');
   const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle' | 'awaiting' | 'completed' | 'cancelled'
 
+  const messagesEndRef = useRef(null);
+
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
