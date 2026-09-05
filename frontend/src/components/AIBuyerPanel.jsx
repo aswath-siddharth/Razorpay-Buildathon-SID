@@ -688,12 +688,12 @@ export default function AIBuyerPanel({
   const parseNaturalLanguageIntent = (queryText, targetProduct = null) => {
     const text = queryText.toLowerCase();
 
-    let budgetMax = 3000;
+    let budgetMax = null;
     const kMatch = text.match(/(\d+(?:\.\d+)?)\s*k\b/i);
     if (kMatch) {
       budgetMax = Math.round(parseFloat(kMatch[1]) * 1000);
     } else {
-      const numMatches = text.match(/(?:under|below|max|rs\.?|₹|\bless\s+than\b)\s*(\d+[\d,]*)/i) || text.match(/(\d+[\d,]*)/);
+      const numMatches = text.match(/(?:under|below|max|budget|limit|rs\.?|₹|\bless\s+than\b)\s*(\d+[\d,]*)/i);
       if (numMatches) {
         const parsed = parseInt(numMatches[1].replace(/,/g, ''), 10);
         if (parsed > 50) {
@@ -829,11 +829,17 @@ export default function AIBuyerPanel({
 
     setMandateConstraints(constraints);
 
+    const budgetStr = constraints.budget_max 
+      ? ` under **₹${constraints.budget_max.toLocaleString('en-IN')}**` 
+      : '';
     const sizeStr = constraints.size ? `, size ${constraints.size}` : '';
+    const etaStr = constraints.delivery_deadline && !constraints.delivery_deadline.includes("Standard") && !constraints.delivery_deadline.includes("Not specified")
+      ? `, arriving **${constraints.delivery_deadline}**`
+      : '';
     const agentAckMsg = {
       id: `agent-ack-${Date.now()}`,
       sender: 'agent',
-      text: `Understood! I parsed your intent mandate: Looking for **${constraints.categoryLabel}** under **₹${constraints.budget_max.toLocaleString('en-IN')}**${sizeStr}, arriving **${constraints.delivery_deadline}**. Querying multi-merchant catalogs...`,
+      text: `Understood! I parsed your intent mandate: Looking for **${constraints.categoryLabel}**${budgetStr}${sizeStr}${etaStr}. Querying multi-merchant catalogs...`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     setMessages(prev => [...prev, agentAckMsg]);
@@ -847,16 +853,20 @@ export default function AIBuyerPanel({
         }
 
         const evaluatedCandidates = pool.map(item => {
-          const exceedsBudget = item.price > constraints.budget_max;
+          const hasBudgetLimit = constraints.budget_max !== null && constraints.budget_max !== undefined;
+          const exceedsBudget = hasBudgetLimit && item.price > constraints.budget_max;
           let candidateStatus = 'candidate';
           let candidateReason = '';
 
           if (exceedsBudget) {
             candidateStatus = 'rejected';
             candidateReason = `✕ Rejected: Price ₹${item.price.toLocaleString('en-IN')} exceeds budget ceiling ₹${constraints.budget_max.toLocaleString('en-IN')}`;
+          } else if (hasBudgetLimit) {
+            candidateStatus = 'candidate';
+            candidateReason = `Meets budget (₹${item.price.toLocaleString('en-IN')} ≤ ₹${constraints.budget_max.toLocaleString('en-IN')}), rating ${item.rating}★, ETA: ${item.eta}`;
           } else {
             candidateStatus = 'candidate';
-            candidateReason = `Meets budget (₹${item.price} ≤ ₹${constraints.budget_max}), rating ${item.rating}★, ETA: ${item.eta}`;
+            candidateReason = `Available: ₹${item.price.toLocaleString('en-IN')}, rating ${item.rating}★, ETA: ${item.eta}`;
           }
 
           return {
@@ -875,7 +885,7 @@ export default function AIBuyerPanel({
           setHasZeroMatch(true);
           setFinalPick(lowestCandidate);
           
-          const explainText = `⚠️ **Zero Candidates Within Budget:** No verified ${constraints.categoryLabel} found under ₹${constraints.budget_max.toLocaleString('en-IN')}. Lowest available candidate is **${lowestCandidate.title}** at ₹${lowestCandidate.price.toLocaleString('en-IN')} (+₹${(lowestCandidate.price - constraints.budget_max).toLocaleString('en-IN')} over ceiling). **Mandate boundary defense prevents unauthorized checkout.**`;
+          const explainText = `⚠️ **Zero Candidates Within Budget:** No verified ${constraints.categoryLabel} found under ₹${(constraints.budget_max || 0).toLocaleString('en-IN')}. Lowest available candidate is **${lowestCandidate.title}** at ₹${lowestCandidate.price.toLocaleString('en-IN')} (+₹${(lowestCandidate.price - (constraints.budget_max || 0)).toLocaleString('en-IN')} over ceiling). **Mandate boundary defense prevents unauthorized checkout.**`;
           setExplainabilityReason(explainText);
           setShowConfirmationPrompt(true);
           setIsProcessing(false);
@@ -890,7 +900,7 @@ export default function AIBuyerPanel({
           winner.reason = 'Stockout mid-flow during live reservation';
           if (fallback) {
             fallback.status = 'winner';
-            fallback.reason = `✓ Secured as Rank #2 fallback within mandate bounds (₹${fallback.price} ≤ ₹${constraints.budget_max})`;
+            fallback.reason = `✓ Secured as Rank #2 fallback within mandate bounds (₹${fallback.price.toLocaleString('en-IN')})`;
           }
         } else {
           winner.status = 'winner';
@@ -908,18 +918,21 @@ export default function AIBuyerPanel({
         const chosen = scenario === 'stockout' && fallback ? fallback : winner;
         setFinalPick(chosen);
 
-        const savedAmount = constraints.budget_max - chosen.price;
-        const savedText = savedAmount > 0 ? `saved ₹${savedAmount.toLocaleString('en-IN')} vs ₹${constraints.budget_max.toLocaleString('en-IN')} ceiling` : `exact budget match`;
+        const savedAmount = constraints.budget_max ? constraints.budget_max - chosen.price : 0;
+        const savedText = constraints.budget_max && savedAmount > 0 
+          ? `saved ₹${savedAmount.toLocaleString('en-IN')} vs ₹${constraints.budget_max.toLocaleString('en-IN')} ceiling, ` 
+          : '';
         
         const explainText = scenario === 'stockout'
           ? `🎯 **Final Pick:** **${chosen.title}** at ₹${chosen.price.toLocaleString('en-IN')} (Recovered gracefully to Rank #2 from ${chosen.merchant} after Rank #1 stockout).`
-          : `🎯 **Final Pick:** **${chosen.title}** at ₹${chosen.price.toLocaleString('en-IN')} (${savedText}, delivers ${chosen.eta}, merchant ${chosen.merchant}).`;
+          : `🎯 **Final Pick:** **${chosen.title}** at ₹${chosen.price.toLocaleString('en-IN')} (${savedText}delivers ${chosen.eta}, merchant ${chosen.merchant}, rated ${chosen.rating}★).`;
 
         setExplainabilityReason(explainText);
         setShowConfirmationPrompt(true);
         setIsProcessing(false);
       }, 650);
   };
+
 
 
   // Start the Live 7-Stage Execution Trace

@@ -71,13 +71,13 @@ def fallback_deterministic_parse(user_message: str) -> IntentMandate:
             )
         )
 
-    # Budget extraction
-    budget_max = 3000.0
+    # Budget extraction - only if explicitly specified
+    budget_max = None
     k_match = re.search(r"(\d+(?:\.\d+)?)\s*k\b", text)
     if k_match:
         budget_max = float(k_match.group(1)) * 1000.0
     else:
-        num_match = re.search(r"(?:under|below|max|rs\.?|₹|\bless\s+than\b)\s*(\d+[\d,]*)", text) or re.search(r"(\d+[\d,]*)", text)
+        num_match = re.search(r"(?:under|below|max|budget|limit|rs\.?|₹|\bless\s+than\b)\s*(\d+[\d,]*)", text)
         if num_match:
             parsed_val = float(num_match.group(1).replace(",", ""))
             if parsed_val > 50:
@@ -105,8 +105,10 @@ def fallback_deterministic_parse(user_message: str) -> IntentMandate:
         eta = "Tomorrow"
     elif any(w in text for w in ["2 day", "two day", "weekend"]):
         eta = "in 2 days"
-    else:
+    elif any(w in text for w in ["friday", "fri"]):
         eta = "Friday (2026-08-29)"
+    else:
+        eta = "Standard Delivery"
 
     # Size extraction
     size = None
@@ -129,7 +131,7 @@ def fallback_deterministic_parse(user_message: str) -> IntentMandate:
 
 def parse_intent(user_message: str) -> IntentMandate:
     """
-    Convert natural-language shopping intent into a trusted IntentMandate using Groq LLM (Llama 3.3 70B),
+    Convert natural-language shopping intent into a trusted IntentMandate using Groq LLM (GPT OSS 120B),
     with automatic deterministic fallback.
     """
     api_key = os.getenv("GROQ_API_KEY")
@@ -144,14 +146,15 @@ def parse_intent(user_message: str) -> IntentMandate:
             "You are the intent parser for Meridian AI Buyer Agent.\n"
             "Analyze the user's message and extract their shopping mandate.\n"
             "Available categories: 'Running', 'Sneakers', 'Audio', 'Watches', 'Bags'.\n\n"
+            "CRITICAL RULE ON BUDGET: If the user DID NOT specify a maximum price or budget (e.g. 'under 3000' or '2k'), set budget_max to null. Do NOT invent or assume a default budget.\n\n"
             "Output strictly valid JSON with keys:\n"
             "- is_greeting: bool (true if user just said hi/hello/help)\n"
             "- conversational_reply: string or null\n"
             "- category: string (one of 'Running', 'Sneakers', 'Audio', 'Watches', 'Bags')\n"
             "- categoryLabel: string (e.g. 'running shoes', 'smartwatches', 'wireless audio')\n"
-            "- budget_max: float or null (in INR, e.g. 3000, 1000)\n"
+            "- budget_max: float or null (in INR ONLY if user specified a price constraint, else null)\n"
             "- size: string or null (e.g. '9', '44mm', 'Universal')\n"
-            "- delivery_deadline: string (e.g. 'Tomorrow', 'Friday (2026-08-29)', 'in 2 days')\n"
+            "- delivery_deadline: string (e.g. 'Tomorrow', 'Friday', 'in 2 days', or 'Standard Delivery')\n"
             "- max_retries: int (default 2)"
         )
 
@@ -162,7 +165,7 @@ def parse_intent(user_message: str) -> IntentMandate:
                 {"role": "user", "content": user_message}
             ],
             response_format={"type": "json_object"},
-            temperature=0.1
+            temperature=0.0
         )
 
         content = completion.choices[0].message.content
@@ -170,12 +173,19 @@ def parse_intent(user_message: str) -> IntentMandate:
             return fallback_deterministic_parse(user_message)
 
         data = json.loads(content)
+        parsed_budget = None
+        if data.get("budget_max") is not None:
+            try:
+                parsed_budget = float(data["budget_max"])
+            except (ValueError, TypeError):
+                parsed_budget = None
+
         return IntentMandate(
             category=data.get("category") or "Running",
             categoryLabel=data.get("categoryLabel") or "running shoes",
-            budget_max=float(data.get("budget_max")) if data.get("budget_max") is not None else 3000.0,
+            budget_max=parsed_budget,
             size=str(data.get("size")) if data.get("size") else ("9" if data.get("category") in ["Running", "Sneakers"] else None),
-            delivery_deadline=data.get("delivery_deadline") or "Friday (2026-08-29)",
+            delivery_deadline=data.get("delivery_deadline") or "Standard Delivery",
             max_retries=int(data.get("max_retries", 2)),
             is_greeting=bool(data.get("is_greeting", False)),
             conversational_reply=data.get("conversational_reply")
@@ -183,4 +193,5 @@ def parse_intent(user_message: str) -> IntentMandate:
 
     except Exception as e:
         print(f"Groq parsing notice (using fallback): {e}")
-        return fallback_deterministic_parse(user_message)
+        return fallback_deterministic_parse(user_message)
+
