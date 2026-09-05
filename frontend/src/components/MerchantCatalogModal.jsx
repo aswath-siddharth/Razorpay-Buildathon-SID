@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Database, Search, RefreshCw, Star, Tag, Truck, Box, Plus, Minus, Check } from 'lucide-react';
+import { API_BASE } from '../config';
 
 export default function MerchantCatalogModal({ isOpen, onClose }) {
   const [products, setProducts] = useState([]);
@@ -16,7 +17,7 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
   const fetchCatalog = async () => {
     setLoading(true);
     try {
-      const resp = await fetch('http://localhost:8000/products');
+      const resp = await fetch(`${API_BASE}/products`);
       if (resp.ok) {
         const data = await resp.json();
         setProducts(data);
@@ -31,7 +32,7 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
   const handleUpdateStock = async (productId, newStock) => {
     setUpdatingId(productId);
     try {
-      const resp = await fetch(`http://localhost:8000/products/${productId}/stock?stock=${Math.max(0, newStock)}`, {
+      const resp = await fetch(`${API_BASE}/products/${productId}/stock?stock=${Math.max(0, newStock)}`, {
         method: 'PATCH',
       });
       if (resp.ok) {

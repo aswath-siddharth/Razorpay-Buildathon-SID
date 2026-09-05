@@ -8,8 +8,7 @@ import MerchantCatalogModal from './components/MerchantCatalogModal';
 import CartDrawer from './components/CartDrawer';
 import OrdersModal from './components/OrdersModal';
 import OrderReceiptModal from './components/OrderReceiptModal';
-
-const API_BASE = 'http://localhost:8000';
+import { API_BASE } from './config';
 
 const INITIAL_SAMPLE_ORDER = {
   id: 'ord_sample_9812',

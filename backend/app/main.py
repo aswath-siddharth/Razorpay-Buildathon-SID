@@ -1,13 +1,22 @@
+import sys
+import os
+
+# Ensure backend root is always in sys.path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .database import Base, engine
 from .routes import merchants, products, buyer, payments
 
-from seed import seed_database
-Base.metadata.create_all(bind=engine)
+try:
+    from seed import seed_database
+    Base.metadata.create_all(bind=engine)
+    seed_database()
+except Exception as e:
+    print(f"Database seed notice: {e}")
 
-seed_database()
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="AI Buyer API",

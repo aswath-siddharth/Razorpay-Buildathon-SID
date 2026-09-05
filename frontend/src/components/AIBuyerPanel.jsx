@@ -398,7 +398,7 @@ const CATALOG_DATABASE = [
   }
 ];
 
-const RAZORPAY_KEY = "rzp_test_TTbqDaKP2i6PmQ";
+import { RAZORPAY_KEY } from '../config';
 
 export default function AIBuyerPanel({
   onRunAgentBackend,
