@@ -16,9 +16,263 @@ import {
   Info,
   XCircle,
   HelpCircle,
-  Clock
+  Clock,
+  RefreshCw
 } from 'lucide-react';
 import AgentExecutionTrace from './AgentExecutionTrace';
+
+// Full Catalog Database for intelligent dynamic matching
+const CATALOG_DATABASE = [
+  // RUNNING SHOES
+  {
+    id: 1,
+    title: "Velocity Run 3 Neutral Trainer",
+    brand: "STRIDELINE",
+    category: "Running",
+    categoryKey: "running_shoes",
+    merchant: "TechMart",
+    price: 2799,
+    originalPrice: 3999,
+    rating: 4.6,
+    reviews: "2,184",
+    eta: "Tomorrow",
+    sizes: [7, 8, 9, 10, 11],
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 2,
+    title: "Duramo SL Responsive Trainer",
+    brand: "AEROSTEP",
+    category: "Running",
+    categoryKey: "running_shoes",
+    merchant: "ShopSphere",
+    price: 2899,
+    originalPrice: 3499,
+    rating: 4.5,
+    reviews: "1,420",
+    eta: "in 2 days",
+    sizes: [7, 8, 9, 10],
+    image: "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 3,
+    title: "AirMatrix Flow Road Runner",
+    brand: "AEROSTEP",
+    category: "Running",
+    categoryKey: "running_shoes",
+    merchant: "QuickBuy",
+    price: 2599,
+    originalPrice: 3699,
+    rating: 4.3,
+    reviews: "640",
+    eta: "Tomorrow",
+    sizes: [8, 9, 10, 11],
+    image: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 4,
+    title: "TrailGrip Pro Off-Road Runner",
+    brand: "STRIDELINE",
+    category: "Running",
+    categoryKey: "running_shoes",
+    merchant: "QuickBuy",
+    price: 3499,
+    originalPrice: 4599,
+    rating: 4.8,
+    reviews: "908",
+    eta: "Tomorrow",
+    sizes: [8, 9, 10],
+    image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=300&q=80"
+  },
+
+  // SNEAKERS
+  {
+    id: 5,
+    title: "Apex Street Classic Low Sneakers",
+    brand: "URBANCRAFT",
+    category: "Sneakers",
+    categoryKey: "sneakers",
+    merchant: "ShopSphere",
+    price: 2499,
+    originalPrice: 3299,
+    rating: 4.7,
+    reviews: "3,110",
+    eta: "Tomorrow",
+    sizes: [7, 8, 9, 10],
+    image: "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 6,
+    title: "Air Retro High Top Street Sneaker",
+    brand: "AEROSTEP",
+    category: "Sneakers",
+    categoryKey: "sneakers",
+    merchant: "TechMart",
+    price: 3199,
+    originalPrice: 4199,
+    rating: 4.6,
+    reviews: "1,290",
+    eta: "in 2 days",
+    sizes: [8, 9, 10],
+    image: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=300&q=80"
+  },
+
+  // AUDIO / HEADPHONES
+  {
+    id: 7,
+    title: "boAt Airdopes 141 ANC True Wireless",
+    brand: "boAt",
+    category: "Audio",
+    categoryKey: "audio",
+    merchant: "PulseGadgets",
+    price: 1699,
+    originalPrice: 2499,
+    rating: 4.5,
+    reviews: "3,400",
+    eta: "Tomorrow",
+    sizes: ["Universal"],
+    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 8,
+    title: "JBL Tune 510BT Pure Bass On-Ear",
+    brand: "JBL",
+    category: "Audio",
+    categoryKey: "audio",
+    merchant: "PulseGadgets",
+    price: 2499,
+    originalPrice: 3499,
+    rating: 4.6,
+    reviews: "1,820",
+    eta: "in 2 days",
+    sizes: ["Standard"],
+    image: "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 9,
+    title: "Sony WH-CH520 Wireless Bluetooth",
+    brand: "Sony",
+    category: "Audio",
+    categoryKey: "audio",
+    merchant: "TechMart",
+    price: 2999,
+    originalPrice: 4499,
+    rating: 4.8,
+    reviews: "2,100",
+    eta: "Tomorrow",
+    sizes: ["Standard"],
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 10,
+    title: "SoundCore Pro ANC Wireless Audio",
+    brand: "SONICPRO",
+    category: "Audio",
+    categoryKey: "audio",
+    merchant: "ShopSphere",
+    price: 3499,
+    originalPrice: 4999,
+    rating: 4.8,
+    reviews: "4,502",
+    eta: "Tomorrow",
+    sizes: ["Standard"],
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=300&q=80"
+  },
+
+  // SMARTWATCHES
+  {
+    id: 11,
+    title: "Fire-Boltt Gladiator Bluetooth Calling Watch",
+    brand: "Fire-Boltt",
+    category: "Watches",
+    categoryKey: "smartwatch",
+    merchant: "PulseGadgets",
+    price: 2199,
+    originalPrice: 3299,
+    rating: 4.4,
+    reviews: "980",
+    eta: "Tomorrow",
+    sizes: ["1.96 Inch"],
+    image: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 12,
+    title: "Noise ColorFit Pro 5 AMOLED Smartwatch",
+    brand: "Noise",
+    category: "Watches",
+    categoryKey: "smartwatch",
+    merchant: "PulseGadgets",
+    price: 2999,
+    originalPrice: 4199,
+    rating: 4.7,
+    reviews: "1,490",
+    eta: "Tomorrow",
+    sizes: ["45mm"],
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 13,
+    title: "Chronos GPS Smart Performance Watch",
+    brand: "HOROLOGE",
+    category: "Watches",
+    categoryKey: "smartwatch",
+    merchant: "ShopSphere",
+    price: 2999,
+    originalPrice: 4299,
+    rating: 4.7,
+    reviews: "1,890",
+    eta: "Tomorrow",
+    sizes: ["44mm"],
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 14,
+    title: "Amazfit Bip 5 Ultra Smartwatch",
+    brand: "Amazfit",
+    category: "Watches",
+    categoryKey: "smartwatch",
+    merchant: "PulseGadgets",
+    price: 3499,
+    originalPrice: 4699,
+    rating: 4.7,
+    reviews: "720",
+    eta: "in 2 days",
+    sizes: ["1.91 Inch"],
+    image: "https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=300&q=80"
+  },
+
+  // BAGS
+  {
+    id: 15,
+    title: "AeroSport Lightweight Hydration Pack",
+    brand: "URBANCRAFT",
+    category: "Bags",
+    categoryKey: "bags",
+    merchant: "QuickBuy",
+    price: 1899,
+    originalPrice: 2499,
+    rating: 4.5,
+    reviews: "780",
+    eta: "in 2 days",
+    sizes: ["20L"],
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=300&q=80"
+  },
+  {
+    id: 16,
+    title: "UrbanShield Commuter Tech Backpack",
+    brand: "URBANCRAFT",
+    category: "Bags",
+    categoryKey: "bags",
+    merchant: "ShopSphere",
+    price: 2499,
+    originalPrice: 3499,
+    rating: 4.7,
+    reviews: "1,120",
+    eta: "Tomorrow",
+    sizes: ["28L"],
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=300&q=80"
+  }
+];
 
 export default function AIBuyerPanel({
   onRunAgentBackend,
@@ -30,7 +284,7 @@ export default function AIBuyerPanel({
     {
       id: 'welcome',
       sender: 'agent',
-      text: "👋 Hi! I am your AI Buyer Agent. Tell me what you'd like to purchase with natural constraints (e.g., 'running shoes under ₹3,000, size 9, arrive by Friday').",
+      text: "👋 Hi! I am your AI Buyer Agent. Tell me what you'd like to purchase with natural constraints (e.g., 'smartwatch under ₹3000 by tomorrow' or 'running shoes under ₹3,000, size 9').",
       time: 'Just now'
     }
   ]);
@@ -41,12 +295,12 @@ export default function AIBuyerPanel({
   const [finalPick, setFinalPick] = useState(null);
   const [explainabilityReason, setExplainabilityReason] = useState('');
   const [mandateConstraints, setMandateConstraints] = useState(null);
+  const [hasZeroMatch, setHasZeroMatch] = useState(false);
 
   // Execution Trace state machine
   const [isExecutingTrace, setIsExecutingTrace] = useState(false);
   const [traceSteps, setTraceSteps] = useState([]);
-  const [activeFailureScenario, setActiveFailureScenario] = useState('none'); // 'none' | 'mandate_breach' | 'bad_signature' | 'stockout'
-  const [currentStepIdx, setCurrentStepIdx] = useState(0);
+  const [activeFailureScenario, setActiveFailureScenario] = useState('none');
 
   const messagesEndRef = useRef(null);
 
@@ -57,15 +311,88 @@ export default function AIBuyerPanel({
   // If user clicked "Buy with AI Agent" on a storefront card
   useEffect(() => {
     if (selectedStorefrontProduct) {
-      const category = selectedStorefrontProduct.attributes?.category || 'running shoes';
-      const catClean = category.replace('_', ' ');
+      const category = selectedStorefrontProduct.category || 'Running';
       const budgetCeiling = Math.ceil(selectedStorefrontProduct.price + 200);
-      const promptQuery = `Buy me ${selectedStorefrontProduct.title} (${catClean}) under ₹${budgetCeiling}, size 9, arrive by Friday`;
+      const promptQuery = `Buy me ${selectedStorefrontProduct.title} (${category}) under ₹${budgetCeiling}, size 9, arrive by Friday`;
       setInputValue(promptQuery);
       handleSendQuery(promptQuery, 'none', selectedStorefrontProduct);
       onClearSelectedProduct();
     }
   }, [selectedStorefrontProduct]);
+
+  // Natural Language Parser
+  const parseNaturalLanguageIntent = (queryText, targetProduct = null) => {
+    const text = queryText.toLowerCase();
+
+    // 1. Parse Budget (handles "1k", "2.5k", "under 3000", "rs 2500", "₹1,000")
+    let budgetMax = 3000;
+    const kMatch = text.match(/(\d+(?:\.\d+)?)\s*k\b/i);
+    if (kMatch) {
+      budgetMax = Math.round(parseFloat(kMatch[1]) * 1000);
+    } else {
+      const numMatches = text.match(/(?:under|below|max|rs\.?|₹|\bless\s+than\b)\s*(\d+[\d,]*)/i) || text.match(/(\d+[\d,]*)/);
+      if (numMatches) {
+        const parsed = parseInt(numMatches[1].replace(/,/g, ''), 10);
+        if (parsed > 50) { // avoid matching single digit sizes
+          budgetMax = parsed;
+        }
+      }
+    }
+
+    // 2. Parse Category
+    let category = "Running";
+    let categoryLabel = "running shoes";
+    if (text.includes("smartwatch") || text.includes("smart watch") || text.includes("watch") || text.includes("watches")) {
+      category = "Watches";
+      categoryLabel = "smartwatches";
+    } else if (text.includes("audio") || text.includes("headphone") || text.includes("earbuds") || text.includes("earphone") || text.includes("tws") || text.includes("speaker") || text.includes("boat") || text.includes("sony") || text.includes("jbl")) {
+      category = "Audio";
+      categoryLabel = "wireless audio";
+    } else if (text.includes("bag") || text.includes("backpack") || text.includes("pack")) {
+      category = "Bags";
+      categoryLabel = "travel & athletic bags";
+    } else if (text.includes("sneaker") || text.includes("sneakers") || text.includes("streetwear")) {
+      category = "Sneakers";
+      categoryLabel = "sneakers";
+    } else {
+      category = "Running";
+      categoryLabel = "running shoes";
+    }
+
+    if (targetProduct) {
+      category = targetProduct.category;
+      categoryLabel = targetProduct.category.toLowerCase();
+    }
+
+    // 3. Parse Delivery Deadline
+    let deliveryEta = "Friday (2026-08-29)";
+    if (text.includes("tomo") || text.includes("tomorrow") || text.includes("1 day") || text.includes("urgent")) {
+      deliveryEta = "Tomorrow";
+    } else if (text.includes("friday") || text.includes("fri")) {
+      deliveryEta = "Friday (2026-08-29)";
+    } else if (text.includes("2 day") || text.includes("weekend")) {
+      deliveryEta = "in 2 days";
+    }
+
+    // 4. Parse Size
+    let size = null;
+    const sizeMatch = text.match(/(?:size|sz|uk)\s*(\d+)/i);
+    if (sizeMatch) {
+      size = parseInt(sizeMatch[1], 10);
+    } else if (category === "Running" || category === "Sneakers") {
+      size = 9; // sensible default
+    }
+
+    return {
+      category,
+      categoryLabel,
+      budget_max: budgetMax,
+      delivery_deadline: deliveryEta,
+      size,
+      max_retries: 2,
+      rawQuery: queryText
+    };
+  };
 
   // Handle user sending shopping intent
   const handleSendQuery = async (queryText = inputValue, scenario = 'none', targetProduct = null) => {
@@ -85,110 +412,123 @@ export default function AIBuyerPanel({
     setCandidateList([]);
     setFinalPick(null);
     setTraceSteps([]);
+    setHasZeroMatch(false);
     setActiveFailureScenario(scenario);
 
-    // 1. Agent conversational response: What it understood & what it's searching for
+    // 1. Natural Language Parse
+    const constraints = parseNaturalLanguageIntent(queryText, targetProduct);
+    setMandateConstraints(constraints);
+
+    // 2. Agent Conversational Acknowledgement
     setTimeout(() => {
-      const budgetMatch = queryText.match(/(\d+[\d,]*)/);
-      const extractedBudget = budgetMatch ? parseInt(budgetMatch[0].replace(/,/g, ''), 10) : 3000;
-      const sizeMatch = queryText.match(/size\s*(\d+)/i);
-      const extractedSize = sizeMatch ? parseInt(sizeMatch[1], 10) : 9;
-
-      const constraints = {
-        category: "running_shoes",
-        budget_max: extractedBudget,
-        size: extractedSize,
-        delivery_deadline: "2026-08-29 (Friday)",
-        max_retries: 2,
-        auth_mode: "pre_approved_intent"
-      };
-      setMandateConstraints(constraints);
-
+      const sizeStr = constraints.size ? `, size ${constraints.size}` : '';
       const agentAckMsg = {
         id: `agent-ack-${Date.now()}`,
         sender: 'agent',
-        text: `Understood! I parsed your intent mandate: Looking for running shoes under ₹${extractedBudget.toLocaleString('en-IN')}, size ${extractedSize}, arriving before Friday. Scanning multi-merchant catalogs...`,
+        text: `Understood! I parsed your intent mandate: Looking for **${constraints.categoryLabel}** under **₹${constraints.budget_max.toLocaleString('en-IN')}**${sizeStr}, arriving **${constraints.delivery_deadline}**. Querying multi-merchant catalogs...`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, agentAckMsg]);
 
-      // 2. Stream inline candidate cards being evaluated
+      // 3. Dynamic Catalog Search & Deterministic Scoring
       setTimeout(() => {
-        const mockCandidates = [
-          {
-            id: 1,
-            title: targetProduct ? targetProduct.title : "Velocity Run 3 Neutral Trainer",
-            brand: "STRIDELINE",
-            merchant: "TechMart",
-            price: targetProduct ? targetProduct.price : 2799,
-            rating: 4.6,
-            eta: "Tomorrow",
-            sizeAvailable: true,
-            status: scenario === 'mandate_breach' ? 'rejected' : scenario === 'stockout' ? 'stockout_first' : 'winner',
-            reason: scenario === 'mandate_breach' 
-              ? "Exceeds modified budget constraint (₹3,499 > ₹3,000 ceiling)"
-              : scenario === 'stockout'
-              ? "Stockout mid-flow during live checkout reservation"
-              : "Best candidate: Lowest price (₹2,799) with 4.6★ rating, size 9 in stock & delivers Tomorrow",
-            image: targetProduct?.image_url || "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80"
-          },
-          {
-            id: 2,
-            title: "Duramo SL Responsive Trainer",
-            brand: "AEROSTEP",
-            merchant: "ShopSphere",
-            price: 2899,
-            rating: 4.5,
-            eta: "in 2 days",
-            sizeAvailable: true,
-            status: scenario === 'stockout' ? 'winner' : 'candidate',
-            reason: scenario === 'stockout' 
-              ? "Secured as Rank #2 fallback within mandate bounds (₹2,899 ≤ ₹3,000)" 
-              : "Viable candidate, but price is ₹100 higher than Rank #1",
-            image: "https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=300&q=80"
-          },
-          {
-            id: 3,
-            title: "TrailGrip Pro Off-Road Runner",
-            brand: "STRIDELINE",
-            merchant: "QuickBuy",
-            price: 3499,
-            rating: 4.8,
-            eta: "Tomorrow",
-            sizeAvailable: true,
-            status: 'rejected',
-            reason: "Rejected: Price ₹3,499 exceeds budget ceiling ₹3,000",
-            image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=300&q=80"
+        let pool = CATALOG_DATABASE.filter(p => p.category === constraints.category);
+        if (pool.length === 0) pool = CATALOG_DATABASE.slice(0, 4);
+
+        if (targetProduct) {
+          // ensure target product is at front
+          pool = [targetProduct, ...pool.filter(p => p.id !== targetProduct.id)];
+        }
+
+        // Evaluate each candidate against budget ceiling and constraints
+        const evaluatedCandidates = pool.map(item => {
+          const exceedsBudget = item.price > constraints.budget_max;
+          let candidateStatus = 'candidate';
+          let candidateReason = '';
+
+          if (exceedsBudget) {
+            candidateStatus = 'rejected';
+            candidateReason = `✕ Rejected: Price ₹${item.price.toLocaleString('en-IN')} exceeds budget ceiling ₹${constraints.budget_max.toLocaleString('en-IN')}`;
+          } else {
+            candidateStatus = 'candidate';
+            candidateReason = `Meets budget (₹${item.price} ≤ ₹${constraints.budget_max}), rating ${item.rating}★, ETA: ${item.eta}`;
           }
-        ];
 
-        setCandidateList(mockCandidates);
+          return {
+            ...item,
+            status: candidateStatus,
+            reason: candidateReason,
+            score: (10000 - item.price) / 10000 + (item.rating / 10)
+          };
+        });
 
-        // 3. Explainability statement & Final Pick
-        const chosen = scenario === 'stockout' ? mockCandidates[1] : scenario === 'mandate_breach' ? mockCandidates[2] : mockCandidates[0];
+        // Filter viable candidates within budget
+        const viableCandidates = evaluatedCandidates.filter(c => c.status !== 'rejected').sort((a, b) => a.price - b.price);
+
+        if (viableCandidates.length === 0) {
+          // Zero match / Budget Breach state
+          const lowestCandidate = pool.slice().sort((a, b) => a.price - b.price)[0];
+          setCandidateList(evaluatedCandidates.slice(0, 3));
+          setHasZeroMatch(true);
+          setFinalPick(lowestCandidate);
+          
+          const explainText = `⚠️ **Zero Candidates Within Budget:** No verified ${constraints.categoryLabel} found under ₹${constraints.budget_max.toLocaleString('en-IN')}. Lowest available candidate is **${lowestCandidate.title}** at ₹${lowestCandidate.price.toLocaleString('en-IN')} (+₹${(lowestCandidate.price - constraints.budget_max).toLocaleString('en-IN')} over ceiling). **Mandate boundary defense prevents unauthorized checkout.**`;
+          setExplainabilityReason(explainText);
+          setShowConfirmationPrompt(true);
+          setIsProcessing(false);
+          return;
+        }
+
+        // Set winner and fallback
+        let winner = viableCandidates[0];
+        let fallback = viableCandidates[1] || evaluatedCandidates.find(c => c.id !== winner.id);
+
+        if (scenario === 'stockout') {
+          // simulate rank 1 out of stock
+          winner.status = 'stockout_first';
+          winner.reason = 'Stockout mid-flow during live reservation';
+          if (fallback) {
+            fallback.status = 'winner';
+            fallback.reason = `✓ Secured as Rank #2 fallback within mandate bounds (₹${fallback.price} ≤ ₹${constraints.budget_max})`;
+          }
+        } else {
+          winner.status = 'winner';
+          winner.reason = `✓ Best candidate: Lowest price (₹${winner.price.toLocaleString('en-IN')}) with ${winner.rating}★ rating, arrives ${winner.eta}`;
+        }
+
+        const finalList = [
+          winner,
+          fallback,
+          ...evaluatedCandidates.filter(c => c.id !== winner.id && (!fallback || c.id !== fallback.id))
+        ].filter(Boolean).slice(0, 3);
+
+        setCandidateList(finalList);
+
+        const chosen = scenario === 'stockout' && fallback ? fallback : winner;
         setFinalPick(chosen);
 
-        const explainText = scenario === 'mandate_breach'
-          ? `Selected candidate ₹3,499 exceeds your budget ceiling of ₹${extractedBudget}. Mandate boundary validation will trigger.`
-          : scenario === 'stockout'
-          ? `Final Pick: **${chosen.title}** at ₹${chosen.price} (Fallback candidate from ShopSphere after Rank #1 stockout).`
-          : `Final Pick: **${chosen.title}** at ₹${chosen.price.toLocaleString('en-IN')} (Saved ₹${(extractedBudget - chosen.price)} vs ₹${extractedBudget} ceiling, arrives ${chosen.eta}, size ${extractedSize} verified in stock).`;
+        const savedAmount = constraints.budget_max - chosen.price;
+        const savedText = savedAmount > 0 ? `saved ₹${savedAmount.toLocaleString('en-IN')} vs ₹${constraints.budget_max.toLocaleString('en-IN')} ceiling` : `exact budget match`;
         
+        const explainText = scenario === 'stockout'
+          ? `🎯 **Final Pick:** **${chosen.title}** at ₹${chosen.price.toLocaleString('en-IN')} (Recovered gracefully to Rank #2 from ${chosen.merchant} after Rank #1 stockout).`
+          : `🎯 **Final Pick:** **${chosen.title}** at ₹${chosen.price.toLocaleString('en-IN')} (${savedText}, delivers ${chosen.eta}, merchant ${chosen.merchant}).`;
+
         setExplainabilityReason(explainText);
         setShowConfirmationPrompt(true);
         setIsProcessing(false);
 
-      }, 700);
+      }, 650);
 
-    }, 500);
+    }, 450);
   };
 
   // Start the Live 7-Stage Execution Trace
-  const handleConfirmAndExecute = () => {
+  const handleConfirmAndExecute = (overrideForceBreach = false) => {
     setShowConfirmationPrompt(false);
     setIsExecutingTrace(true);
 
-    const isBreach = activeFailureScenario === 'mandate_breach';
+    const isBreach = overrideForceBreach || hasZeroMatch || activeFailureScenario === 'mandate_breach';
     const isBadSig = activeFailureScenario === 'bad_signature';
     const isStockout = activeFailureScenario === 'stockout';
 
@@ -200,21 +540,21 @@ export default function AIBuyerPanel({
     };
 
     const budgetCeiling = mandateConstraints?.budget_max || 3000;
-    const actualPrice = isBreach ? 3499 : chosen.price;
+    const actualPrice = isBreach && hasZeroMatch ? chosen.price : isBreach ? budgetCeiling + 499 : chosen.price;
 
     const initialSteps = [
       {
         id: 'INTENT_PARSED',
         title: '1. Intent Parsed',
-        description: 'Extracted structured constraints: Category, Budget Ceiling, Size & ETA',
+        description: `Structured constraints: Category (${mandateConstraints?.category || 'General'}), Budget Ceiling (₹${budgetCeiling.toLocaleString('en-IN')}), ETA (${mandateConstraints?.delivery_deadline || 'Friday'})`,
         status: 'running',
         timestamp: '+0.00s',
         rawPayload: {
-          intent: "bounded_purchase",
-          category: "running_shoes",
+          intent: "bounded_agent_purchase",
+          category: mandateConstraints?.category || "Running",
           budget_max_inr: budgetCeiling,
-          size_uk: mandateConstraints?.size || 9,
-          delivery_deadline: "2026-08-29",
+          size_spec: mandateConstraints?.size || "Universal",
+          delivery_deadline: mandateConstraints?.delivery_deadline || "Friday",
           max_retries: 2,
           auth_context: "pre_approved_mandate_bound"
         }
@@ -222,12 +562,12 @@ export default function AIBuyerPanel({
       {
         id: 'CANDIDATES_SCORED',
         title: '2. Candidates Scored',
-        description: 'Multi-merchant discovery evaluated 5 candidates; winner ranked #1',
+        description: `Catalog discovery evaluated ${candidateList.length || 3} items across merchants; best candidate scored`,
         status: 'pending',
         timestamp: '',
         rawPayload: {
-          candidates_evaluated_count: 5,
-          filtered_out_count: 2,
+          candidates_evaluated_count: candidateList.length || 3,
+          filtered_out_count: candidateList.filter(c => c.status === 'rejected').length,
           winner: {
             title: chosen.title,
             merchant: chosen.merchant,
@@ -241,13 +581,13 @@ export default function AIBuyerPanel({
         id: 'MANDATE_AUTHORIZED',
         title: '3. Mandate Authorized',
         description: isBreach
-          ? `MANDATE REJECT: Amount ₹${actualPrice} exceeds budget ceiling ₹${budgetCeiling}`
-          : `Bounded Proof: Amount ₹${actualPrice} ≤ Ceiling ₹${budgetCeiling} (Margin: ₹${budgetCeiling - actualPrice} left)`,
+          ? `MANDATE REJECT: Amount ₹${actualPrice.toLocaleString('en-IN')} exceeds budget ceiling ₹${budgetCeiling.toLocaleString('en-IN')}`
+          : `Bounded Proof: Amount ₹${actualPrice.toLocaleString('en-IN')} ≤ Ceiling ₹${budgetCeiling.toLocaleString('en-IN')} (Margin: ₹${(budgetCeiling - actualPrice).toLocaleString('en-IN')} remaining)`,
         status: 'pending',
         timestamp: '',
         boundedProof: {
-          amountStr: `₹${actualPrice}`,
-          ceilingStr: `₹${budgetCeiling}`,
+          amountStr: `₹${actualPrice.toLocaleString('en-IN')}`,
+          ceilingStr: `₹${budgetCeiling.toLocaleString('en-IN')}`,
           passed: !isBreach
         },
         rawPayload: {
@@ -263,13 +603,13 @@ export default function AIBuyerPanel({
       {
         id: 'ORDER_CREATED',
         title: '4. Order Created',
-        description: 'Merchant TechMart order created with single-use authorization token',
+        description: `Merchant ${chosen.merchant} order created with single-use authorization token`,
         status: 'pending',
         timestamp: '',
         rawPayload: {
-          merchant_order_id: "ord_merch_techmart_78291a",
-          merchant_id: "m_techmart_01",
-          sku: "SKU-VELO3-SZ9",
+          merchant_order_id: `ord_merch_${chosen.merchant.toLowerCase()}_78291a`,
+          merchant_id: `m_${chosen.merchant.toLowerCase()}_01`,
+          item_title: chosen.title,
           currency: "INR",
           total: actualPrice
         }
@@ -326,7 +666,7 @@ export default function AIBuyerPanel({
 
     setTraceSteps(initialSteps);
 
-    // Live Step Execution Sequencer (smooth pacing ~700ms per step)
+    // Live Step Execution Sequencer
     const runSequencer = async () => {
       // Step 1: Intent Parsed -> Done
       await new Promise(r => setTimeout(r, 600));
@@ -344,16 +684,16 @@ export default function AIBuyerPanel({
           ...prev.map((s, i) => i === 2 ? { ...s, status: 'failed', timestamp: '+0.62s' } : s),
           {
             id: 'AGENT_MITIGATION',
-            title: '⚡ Agent Mitigation',
-            description: `Ceiling breach handled: Bounded search activated. Reverted to next candidate within ₹${budgetCeiling} (Retry 1 of 2). Zero funds spent.`,
+            title: '🛑 Agent Mitigation: Safe Abort',
+            description: `Mandate Defense Triggered: Price ₹${actualPrice.toLocaleString('en-IN')} exceeds budget ceiling ₹${budgetCeiling.toLocaleString('en-IN')}. Zero authorization tokens issued. Transaction halted with ₹0 charged.`,
             status: 'mitigated',
             timestamp: '+0.88s',
             rawPayload: {
-              action: "FALLBACK_RECOVERY",
-              reason: "Amount 3499 exceeds mandate ceiling 3000",
-              mitigation_strategy: "retry_next_ranked_candidate",
-              retries_remaining: 1,
-              funds_charged: 0
+              action: "SAFE_ABORT",
+              reason: `Amount ${actualPrice} exceeds mandate ceiling ${budgetCeiling}`,
+              mitigation_strategy: "halt_and_protect_funds",
+              funds_charged: 0,
+              mandate_defense_active: true
             }
           }
         ]);
@@ -407,17 +747,23 @@ export default function AIBuyerPanel({
     runSequencer();
   };
 
+  const handleAdjustBudgetAndRerun = (newBudget) => {
+    const query = `Buy me ${mandateConstraints?.categoryLabel || 'product'} under ₹${newBudget}, arrive ${mandateConstraints?.delivery_deadline || 'by Friday'}`;
+    handleSendQuery(query, 'none');
+  };
+
   const handleReset = () => {
     setIsExecutingTrace(false);
     setShowConfirmationPrompt(false);
     setCandidateList([]);
     setFinalPick(null);
     setTraceSteps([]);
+    setHasZeroMatch(false);
     setMessages([
       {
         id: 'welcome',
         sender: 'agent',
-        text: "👋 AI Buyer Agent ready! Select a quick demo prompt or type your own shopping query below.",
+        text: "👋 AI Buyer Agent ready! Type any shopping request (e.g., 'smartwatch under ₹3000 by tomorrow' or 'running shoes under ₹3000, size 9').",
         time: 'Just now'
       }
     ]);
@@ -487,25 +833,34 @@ export default function AIBuyerPanel({
         </span>
         
         <button
-          onClick={() => handleSendQuery("Buy me running shoes under ₹3000, size 9, arrive by Friday", "none")}
+          onClick={() => handleSendQuery("running shoes under ₹3000, size 9, arrive by Friday", "none")}
           className="btn btn-secondary btn-xs"
           style={{ whiteSpace: 'nowrap', fontSize: '0.72rem' }}
           title="Happy Path: Full automated bounded purchase"
         >
-          ⚡ Happy Path
+          ⚡ Running Shoes &lt; ₹3k
         </button>
 
         <button
-          onClick={() => handleSendQuery("Buy me running shoes under ₹3000, size 9, arrive by Friday", "mandate_breach")}
+          onClick={() => handleSendQuery("smartwatch under ₹3000 by tomorrow", "none")}
+          className="btn btn-secondary btn-xs"
+          style={{ whiteSpace: 'nowrap', fontSize: '0.72rem' }}
+          title="Smartwatch under ₹3k"
+        >
+          ⌚ Smartwatch &lt; ₹3k
+        </button>
+
+        <button
+          onClick={() => handleSendQuery("smartwatch under 1K by tomorrow", "mandate_breach")}
           className="btn btn-secondary btn-xs"
           style={{ whiteSpace: 'nowrap', fontSize: '0.72rem', color: '#b91c1c' }}
-          title="Failure Demo: Exceeds mandate budget ceiling"
+          title="Failure Demo: Budget Ceiling Breach (₹1k vs ₹2.1k)"
         >
-          ⚠️ Mandate Breach
+          ⚠️ Mandate Breach (&lt; ₹1k)
         </button>
 
         <button
-          onClick={() => handleSendQuery("Buy me running shoes under ₹3000, size 9, arrive by Friday", "bad_signature")}
+          onClick={() => handleSendQuery("wireless audio headphones under ₹3000", "bad_signature")}
           className="btn btn-secondary btn-xs"
           style={{ whiteSpace: 'nowrap', fontSize: '0.72rem', color: '#b91c1c' }}
           title="Failure Demo: Simulates bad cryptographic signature rejection"
@@ -514,7 +869,7 @@ export default function AIBuyerPanel({
         </button>
 
         <button
-          onClick={() => handleSendQuery("Buy me running shoes under ₹3000, size 9, arrive by Friday", "stockout")}
+          onClick={() => handleSendQuery("running shoes under ₹3000, size 9", "stockout")}
           className="btn btn-secondary btn-xs"
           style={{ whiteSpace: 'nowrap', fontSize: '0.72rem', color: '#b45309' }}
           title="Failure Demo: Mid-flow stockout recovery to rank 2"
@@ -597,15 +952,15 @@ export default function AIBuyerPanel({
         {/* Explainability Statement Callout */}
         {explainabilityReason && (
           <div className="fade-in-node" style={{
-            background: 'var(--accent-blue-light)',
-            border: '1px solid var(--border-medium)',
+            background: hasZeroMatch ? '#fef2f2' : 'var(--accent-blue-light)',
+            border: `1px solid ${hasZeroMatch ? '#fecaca' : 'var(--border-medium)'}`,
             borderRadius: 'var(--radius-md)',
             padding: '12px 14px',
             fontSize: '0.82rem',
             color: 'var(--text-primary)',
             lineHeight: 1.45
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-blue)', fontWeight: 700, marginBottom: '4px', fontSize: '0.78rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: hasZeroMatch ? '#dc2626' : 'var(--accent-blue)', fontWeight: 700, marginBottom: '4px', fontSize: '0.78rem' }}>
               <Zap size={14} /> EXPLAINABILITY REASONING
             </div>
             <div dangerouslySetInnerHTML={{ __html: explainabilityReason.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
@@ -616,27 +971,60 @@ export default function AIBuyerPanel({
         {showConfirmationPrompt && !isExecutingTrace && traceSteps.length === 0 && (
           <div className="fade-in-node" style={{
             background: 'var(--bg-surface)',
-            border: '1px solid var(--border-focus)',
+            border: `1px solid ${hasZeroMatch ? '#f87171' : 'var(--border-focus)'}`,
             borderRadius: 'var(--radius-md)',
             padding: '14px',
             boxShadow: 'var(--shadow-sm)',
             marginTop: '4px'
           }}>
-            <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-              Proceed with bounded agent checkout?
-            </div>
-            <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-              Issuing single-use payment mandate bounded to ₹{finalPick?.price.toLocaleString('en-IN') || '2,799'} with Razorpay test rails.
-            </p>
+            {hasZeroMatch ? (
+              <div>
+                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#991b1b', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <AlertTriangle size={16} color="#dc2626" />
+                  <span>Mandate Boundary Breach Detected</span>
+                </div>
+                <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                  Price ₹{finalPick?.price.toLocaleString('en-IN')} exceeds your ₹{mandateConstraints?.budget_max.toLocaleString('en-IN')} ceiling. How would you like to proceed?
+                </p>
 
-            <button
-              onClick={handleConfirmAndExecute}
-              className="btn btn-primary"
-              style={{ width: '100%', fontSize: '0.88rem', padding: '10px' }}
-            >
-              <Zap size={16} />
-              <span>Confirm & Execute Agent Checkout</span>
-            </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button
+                    onClick={() => handleConfirmAndExecute(true)}
+                    className="btn btn-danger"
+                    style={{ width: '100%', fontSize: '0.84rem', padding: '9px' }}
+                    title="Run execution trace to demonstrate Mandate Ceiling Breach and Safe Abort"
+                  >
+                    <span>Demonstrate Mandate Safety Abort (₹0 Charged)</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleAdjustBudgetAndRerun(Math.ceil((finalPick?.price || 2500) + 100))}
+                    className="btn btn-secondary"
+                    style={{ width: '100%', fontSize: '0.82rem', padding: '8px' }}
+                  >
+                    <span>Adjust Budget Ceiling to ₹{Math.ceil((finalPick?.price || 2500) + 100).toLocaleString('en-IN')} & Re-run</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                  Proceed with bounded agent checkout?
+                </div>
+                <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                  Issuing single-use payment mandate bounded to ₹{finalPick?.price.toLocaleString('en-IN') || '2,799'} with Razorpay test rails.
+                </p>
+
+                <button
+                  onClick={() => handleConfirmAndExecute(false)}
+                  className="btn btn-primary"
+                  style={{ width: '100%', fontSize: '0.88rem', padding: '10px' }}
+                >
+                  <Zap size={16} />
+                  <span>Confirm & Execute Agent Checkout</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -645,7 +1033,7 @@ export default function AIBuyerPanel({
           <AgentExecutionTrace
             traceState={traceSteps}
             isExecuting={isExecutingTrace}
-            onResetTrace={handleConfirmAndExecute}
+            onResetTrace={() => handleConfirmAndExecute(hasZeroMatch)}
           />
         )}
 
@@ -670,7 +1058,7 @@ export default function AIBuyerPanel({
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="e.g. running shoes under ₹3000, size 9..."
+          placeholder="e.g. smartwatch under 3k, running shoes..."
           className="input-text"
           style={{ fontSize: '0.84rem', padding: '9px 12px' }}
           disabled={isProcessing || isExecutingTrace}
