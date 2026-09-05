@@ -4,18 +4,21 @@ import {
   ShieldCheck, 
   Layers, 
   History, 
-  Database,
-  ExternalLink,
+  ShoppingBag,
+  PackageCheck,
   CheckCircle2,
-  Lock
+  Lock,
+  Receipt
 } from 'lucide-react';
 
 export default function Header({ 
   searchQuery, 
   onSearchChange,
   onOpenArchitecture,
-  onOpenCatalog,
-  onOpenHistory,
+  onOpenCart,
+  onOpenOrders,
+  cartItemCount = 0,
+  orderCount = 0,
   backendStatus = 'connected'
 }) {
   return (
@@ -34,8 +37,6 @@ export default function Header({
       
       {/* Left: Brand Logo & Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        
-        {/* Meridian Logo (matching reference image: black rounded box + 'M' + Meridian) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
           <div style={{
             width: '32px',
@@ -62,15 +63,10 @@ export default function Header({
             Meridian
           </span>
         </div>
-
-        {/* Razorpay Track Badge */}
-        <span className="badge badge-black" style={{ fontSize: '0.68rem', display: 'none' }}>
-          TRACK 01
-        </span>
       </div>
 
       {/* Center: Global Search Bar */}
-      <div style={{ flex: 1, maxWidth: '540px', margin: '0 24px' }}>
+      <div style={{ flex: 1, maxWidth: '500px', margin: '0 20px' }}>
         <div style={{ position: 'relative' }}>
           <Search 
             size={16} 
@@ -79,7 +75,7 @@ export default function Header({
           />
           <input
             type="text"
-            placeholder="Search shoes, audio, bags..."
+            placeholder="Search shoes, audio, bags, smartwatches..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="input-text"
@@ -97,29 +93,58 @@ export default function Header({
         </div>
       </div>
 
-      {/* Right: Actions & Status */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      {/* Right: Actions (Cart, Orders, Architecture, Status) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         
-        {/* Architecture Diagram Modal */}
+        {/* Shopping Cart Button */}
+        <button
+          onClick={onOpenCart}
+          className="btn btn-primary btn-sm"
+          style={{ fontSize: '0.8rem', gap: '6px', position: 'relative' }}
+          title="Open Shopping Cart"
+        >
+          <ShoppingBag size={15} />
+          <span>Cart</span>
+          {cartItemCount > 0 && (
+            <span style={{
+              background: '#ffffff',
+              color: '#0066ff',
+              borderRadius: '9999px',
+              padding: '1px 6px',
+              fontSize: '0.68rem',
+              fontWeight: 800,
+              marginLeft: '2px'
+            }}>
+              {cartItemCount}
+            </span>
+          )}
+        </button>
+
+        {/* My Orders / Invoices Button */}
+        <button
+          onClick={onOpenOrders}
+          className="btn btn-outline btn-sm"
+          style={{ fontSize: '0.8rem', gap: '5px' }}
+          title="View Past Orders & Tax Invoices"
+        >
+          <Receipt size={14} color="var(--accent-blue)" />
+          <span>My Orders</span>
+          {orderCount > 0 && (
+            <span className="badge badge-running" style={{ fontSize: '0.65rem', padding: '1px 5px' }}>
+              {orderCount}
+            </span>
+          )}
+        </button>
+
+        {/* Architecture Modal */}
         <button
           onClick={onOpenArchitecture}
           className="btn btn-outline btn-sm"
-          style={{ fontSize: '0.78rem', gap: '5px' }}
+          style={{ fontSize: '0.78rem', gap: '4px' }}
           title="Inspect End-to-End System Architecture"
         >
-          <Layers size={14} color="var(--accent-blue)" />
-          <span style={{ display: 'inline' }}>Architecture</span>
-        </button>
-
-        {/* Audit Sessions History */}
-        <button
-          onClick={onOpenHistory}
-          className="btn btn-outline btn-sm"
-          style={{ fontSize: '0.78rem', gap: '5px' }}
-          title="View Historical Audit Logs"
-        >
-          <History size={14} />
-          <span>Audit Logs</span>
+          <Layers size={14} />
+          <span>Architecture</span>
         </button>
 
         {/* Currency & Test Mode Pill */}

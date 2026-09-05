@@ -18,18 +18,23 @@ import {
   ExternalLink,
   Code2,
   Copy,
-  AlertTriangle
+  AlertTriangle,
+  Zap,
+  RefreshCw,
+  XCircle
 } from 'lucide-react';
 
 export default function AgentExecutionTrace({
-  traceState, // current active steps array or state machine
+  traceState,
   isExecuting,
-  currentStepIndex,
-  onRetryStep,
   onResetTrace,
-  failureMode = 'none', // 'none' | 'mandate_breach' | 'bad_signature' | 'stockout'
+  onOpenRazorpayModal,
+  onSimulateCompletePayment,
+  selectedProduct,
+  actualAmount = 2799,
+  paymentStatus = 'idle'
 }) {
-  const [expandedSteps, setExpandedSteps] = useState({ 2: true }); // Step 3 (Mandate Authorized) expanded by default for bounded proof
+  const [expandedSteps, setExpandedSteps] = useState({ 2: true, 4: true });
   const [copiedStep, setCopiedStep] = useState(null);
 
   const toggleExpand = (stepId) => {
@@ -60,29 +65,6 @@ export default function AgentExecutionTrace({
     }
   };
 
-  const getStepBaseIcon = (stepKey) => {
-    switch (stepKey) {
-      case 'INTENT_PARSED':
-        return <Compass size={15} />;
-      case 'CANDIDATES_SCORED':
-        return <ListFilter size={15} />;
-      case 'MANDATE_AUTHORIZED':
-        return <ShieldCheck size={15} />;
-      case 'ORDER_CREATED':
-        return <ShoppingBag size={15} />;
-      case 'PAYMENT_INITIATED':
-        return <CreditCard size={15} />;
-      case 'WEBHOOK_VERIFIED':
-        return <Key size={15} />;
-      case 'CONFIRMED':
-        return <CheckCircle2 size={15} />;
-      case 'AGENT_MITIGATION':
-        return <AlertTriangle size={15} />;
-      default:
-        return <ShieldCheck size={15} />;
-    }
-  };
-
   return (
     <div className="trace-container">
       
@@ -96,6 +78,10 @@ export default function AgentExecutionTrace({
             {isExecuting ? (
               <span className="badge badge-running">
                 <RotateCw size={11} className="spin-icon" /> Live Stepping
+              </span>
+            ) : paymentStatus === 'cancelled' ? (
+              <span className="badge badge-fail">
+                <XCircle size={11} /> Payment Cancelled
               </span>
             ) : (
               <span className="badge badge-success">
@@ -161,12 +147,12 @@ export default function AgentExecutionTrace({
                       )}
                       {isRunning && (
                         <span className="badge badge-running" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
-                          Evaluating...
+                          {step.id === 'PAYMENT_INITIATED' ? 'Awaiting Razorpay...' : 'Evaluating...'}
                         </span>
                       )}
                       {isFailed && (
                         <span className="badge badge-fail" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
-                          REJECTED / FAILED
+                          {step.id === 'PAYMENT_INITIATED' ? 'PAYMENT CANCELLED' : 'REJECTED / FAILED'}
                         </span>
                       )}
                       {isMitigation && (
@@ -222,12 +208,88 @@ export default function AgentExecutionTrace({
                 </div>
               )}
 
+              {/* Step 5: Payment Initiated with Razorpay Checkout Action Buttons */}
+              {step.id === 'PAYMENT_INITIATED' && (
+                <div style={{
+                  padding: '10px 12px',
+                  background: isFailed ? '#fef2f2' : isDone ? '#f0fdf4' : '#eff5ff',
+                  borderTop: `1px solid ${isFailed ? '#fecaca' : isDone ? '#bbf7d0' : '#bfdbfe'}`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.76rem', color: isFailed ? '#991b1b' : isDone ? '#166534' : '#1e40af', fontWeight: 600 }}>
+                      <CreditCard size={14} color={isFailed ? '#dc2626' : isDone ? '#16a34a' : '#0066ff'} />
+                      <span>Razorpay Order ID: <strong>{step.rawPayload?.razorpay_order_id || 'order_RPZ819201'}</strong></span>
+                    </div>
+
+                    <span className={`badge ${isFailed ? 'badge-fail' : isDone ? 'badge-success' : 'badge-running'}`} style={{ fontSize: '0.66rem' }}>
+                      {isFailed ? 'Payment Dismissed' : isDone ? 'Payment Captured' : 'Awaiting Checkout'}
+                    </span>
+                  </div>
+
+                  {/* Render payment details when completed, or action buttons when pending / cancelled */}
+                  {isDone ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '2px', fontSize: '0.74rem', color: '#166534' }}>
+                      <span>Payment ID: <strong className="font-mono">{step.rawPayload?.razorpay_payment_id || 'pay_TYPhPj2ez9unM2'}</strong></span>
+                      <span style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                        <Check size={12} /> Authorized & Charged
+                      </span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onOpenRazorpayModal) onOpenRazorpayModal();
+                        }}
+                        className={`btn ${isFailed ? 'btn-danger' : 'btn-primary'} btn-xs`}
+                        style={{ flex: 1, padding: '6px 10px', fontSize: '0.76rem', gap: '5px', minWidth: '160px' }}
+                        title="Open Razorpay Standard Checkout popup (enter any dummy details)"
+                      >
+                        <Zap size={12} />
+                        <span>{isFailed ? 'Retry Razorpay Checkout' : 'Open Razorpay Checkout Modal'}</span>
+                      </button>
+
+                      {isRunning && onSimulateCompletePayment && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSimulateCompletePayment();
+                          }}
+                          className="btn btn-success btn-xs"
+                          style={{ padding: '6px 8px', fontSize: '0.74rem', gap: '4px' }}
+                          title="Simulate successful dummy payment completion"
+                        >
+                          <Check size={12} />
+                          <span>Simulate Success</span>
+                        </button>
+                      )}
+
+                      <a
+                        href={`https://rzp.io/rzp/${(step.rawPayload?.razorpay_order_id || 'test').slice(-6)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="btn btn-outline btn-xs"
+                        style={{ padding: '6px 8px', fontSize: '0.74rem', gap: '4px', background: '#ffffff' }}
+                        title="Open Razorpay Hosted Checkout in new tab"
+                      >
+                        <ExternalLink size={12} />
+                        <span>rzp.io</span>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Webhook Signature Verification Badge for Step 6 */}
               {step.id === 'WEBHOOK_VERIFIED' && step.signatureDetails && (
                 <div style={{
                   padding: '8px 12px',
-                  background: isFailed ? '#fef2f2' : '#f0fdf4',
-                  borderTop: `1px solid ${isFailed ? '#fecaca' : '#bbf7d0'}`,
+                  background: isFailed ? '#fef2f2' : isDone ? '#f0fdf4' : '#f8fafc',
+                  borderTop: `1px solid ${isFailed ? '#fecaca' : isDone ? '#bbf7d0' : '#e2e8f0'}`,
                   fontSize: '0.74rem',
                   display: 'flex',
                   alignItems: 'center',
@@ -235,18 +297,41 @@ export default function AgentExecutionTrace({
                   gap: '8px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Key size={12} color={isFailed ? '#dc2626' : '#16a34a'} />
-                    <span style={{ fontWeight: 600, color: isFailed ? '#991b1b' : '#166534' }}>
+                    <Key size={12} color={isFailed ? '#dc2626' : isDone ? '#16a34a' : '#94a3b8'} />
+                    <span style={{ fontWeight: 600, color: isFailed ? '#991b1b' : isDone ? '#166534' : '#64748b' }}>
                       Crypto Signature:
                     </span>
-                    <span className="font-mono" style={{ fontSize: '0.68rem', color: isFailed ? '#b91c1c' : '#166534' }}>
+                    <span className="font-mono" style={{ fontSize: '0.68rem', color: isFailed ? '#b91c1c' : isDone ? '#166534' : '#64748b' }}>
                       {step.signatureDetails.algorithm} ({step.signatureDetails.status})
                     </span>
                   </div>
 
-                  <span className={`badge ${isFailed ? 'badge-fail' : 'badge-success'}`} style={{ fontSize: '0.66rem' }}>
-                    {isFailed ? 'SIGNATURE MISMATCH (400)' : 'HMAC-SHA256 PASS'}
+                  <span className={`badge ${isFailed ? 'badge-fail' : isDone ? 'badge-success' : 'badge-pending'}`} style={{ fontSize: '0.66rem' }}>
+                    {isFailed ? 'SIGNATURE MISMATCH (400)' : isDone ? 'HMAC-SHA256 PASS' : 'AWAITING CAPTURE'}
                   </span>
+                </div>
+              )}
+
+              {/* Step 7 Confirmed: Receipt Summary & Status Badge */}
+              {step.id === 'CONFIRMED' && (
+                <div style={{
+                  padding: '10px 12px',
+                  background: isDone ? '#f0fdf4' : '#f8fafc',
+                  borderTop: `1px solid ${isDone ? '#bbf7d0' : '#e2e8f0'}`,
+                  fontSize: '0.76rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <span style={{ color: isDone ? '#166534' : 'var(--text-muted)', fontWeight: 600 }}>
+                    Receipt: <strong className="font-mono">{isDone ? (step.rawPayload?.receipt_id || 'RCP_MERIDIAN_88921a') : 'Pending Completion'}</strong>
+                  </span>
+
+                  {isDone && (
+                    <span className="badge badge-success" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
+                      <Check size={11} /> Order Confirmed
+                    </span>
+                  )}
                 </div>
               )}
 

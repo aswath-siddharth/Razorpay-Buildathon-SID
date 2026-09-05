@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   ShoppingBag, 
   Search, 
@@ -16,11 +16,13 @@ import {
 } from 'lucide-react';
 
 const INITIAL_PRODUCTS = [
+  // RUNNING
   {
     id: 1,
     title: "Velocity Run 3 Neutral Trainer",
     brand: "STRIDELINE",
     category: "Running",
+    merchant: "TechMart",
     price: 2799,
     originalPrice: 3999,
     discount: "30% off",
@@ -36,6 +38,7 @@ const INITIAL_PRODUCTS = [
     title: "TrailGrip Pro Off-Road Runner",
     brand: "STRIDELINE",
     category: "Running",
+    merchant: "QuickBuy",
     price: 3499,
     originalPrice: 4599,
     discount: "24% off",
@@ -51,6 +54,7 @@ const INITIAL_PRODUCTS = [
     title: "CloudGlide Ultra Sprint Shoes",
     brand: "AEROSTEP",
     category: "Running",
+    merchant: "ShopSphere",
     price: 2899,
     originalPrice: 3499,
     discount: "17% off",
@@ -66,6 +70,7 @@ const INITIAL_PRODUCTS = [
     title: "AirMatrix Flow Road Runner",
     brand: "AEROSTEP",
     category: "Running",
+    merchant: "QuickBuy",
     price: 2599,
     originalPrice: 3699,
     discount: "29% off",
@@ -77,10 +82,45 @@ const INITIAL_PRODUCTS = [
     image: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?auto=format&fit=crop&w=600&q=80"
   },
   {
+    id: 17,
+    title: "ZoomX Marathon Elite VaporFly",
+    brand: "STRIDELINE",
+    category: "Running",
+    merchant: "TechMart",
+    price: 3899,
+    originalPrice: 4999,
+    discount: "22% off",
+    rating: 4.9,
+    reviews: "3,210",
+    stock: 7,
+    eta: "Tomorrow",
+    sizes: [8, 9, 10, 11],
+    image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 18,
+    title: "Infinity React Lightweight Racer",
+    brand: "AEROSTEP",
+    category: "Running",
+    merchant: "PulseGadgets",
+    price: 2299,
+    originalPrice: 3199,
+    discount: "28% off",
+    rating: 4.5,
+    reviews: "820",
+    stock: 14,
+    eta: "in 2 days",
+    sizes: [7, 8, 9, 10],
+    image: "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?auto=format&fit=crop&w=600&q=80"
+  },
+
+  // SNEAKERS
+  {
     id: 5,
     title: "Apex Street Classic Low Sneakers",
     brand: "URBANCRAFT",
     category: "Sneakers",
+    merchant: "ShopSphere",
     price: 2499,
     originalPrice: 3299,
     discount: "24% off",
@@ -92,10 +132,61 @@ const INITIAL_PRODUCTS = [
     image: "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&w=600&q=80"
   },
   {
+    id: 9,
+    title: "Air Retro High Top Street Sneaker",
+    brand: "AEROSTEP",
+    category: "Sneakers",
+    merchant: "TechMart",
+    price: 3199,
+    originalPrice: 4199,
+    discount: "23% off",
+    rating: 4.6,
+    reviews: "1,290",
+    stock: 8,
+    eta: "in 2 days",
+    sizes: [8, 9, 10],
+    image: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 19,
+    title: "Urban Canvas Low Court Kicks",
+    brand: "URBANCRAFT",
+    category: "Sneakers",
+    merchant: "QuickBuy",
+    price: 1999,
+    originalPrice: 2799,
+    discount: "28% off",
+    rating: 4.5,
+    reviews: "1,850",
+    stock: 11,
+    eta: "Tomorrow",
+    sizes: [7, 8, 9, 10, 11],
+    image: "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 20,
+    title: "Vintage Suede Minimalist Classic",
+    brand: "STRIDELINE",
+    category: "Sneakers",
+    merchant: "ShopSphere",
+    price: 2899,
+    originalPrice: 3699,
+    discount: "21% off",
+    rating: 4.8,
+    reviews: "940",
+    stock: 6,
+    eta: "Tomorrow",
+    sizes: [8, 9, 10],
+    image: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=600&q=80"
+  },
+
+  // AUDIO
+  {
     id: 6,
     title: "SoundCore Pro ANC Wireless Audio",
     brand: "SONICPRO",
     category: "Audio",
+    merchant: "ShopSphere",
     price: 2999,
     originalPrice: 4999,
     discount: "40% off",
@@ -107,10 +198,159 @@ const INITIAL_PRODUCTS = [
     image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80"
   },
   {
+    id: 10,
+    title: "boAt Airdopes 141 ANC True Wireless",
+    brand: "boAt",
+    category: "Audio",
+    merchant: "PulseGadgets",
+    price: 1699,
+    originalPrice: 2499,
+    discount: "32% off",
+    rating: 4.5,
+    reviews: "3,400",
+    stock: 20,
+    eta: "Tomorrow",
+    sizes: ["Universal"],
+    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 11,
+    title: "JBL Tune 510BT Pure Bass On-Ear",
+    brand: "JBL",
+    category: "Audio",
+    merchant: "PulseGadgets",
+    price: 2499,
+    originalPrice: 3499,
+    discount: "28% off",
+    rating: 4.6,
+    reviews: "1,820",
+    stock: 16,
+    eta: "in 2 days",
+    sizes: ["Standard"],
+    image: "https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 12,
+    title: "Sony WH-CH520 Wireless Bluetooth",
+    brand: "Sony",
+    category: "Audio",
+    merchant: "TechMart",
+    price: 2999,
+    originalPrice: 4499,
+    discount: "33% off",
+    rating: 4.8,
+    reviews: "2,100",
+    stock: 10,
+    eta: "Tomorrow",
+    sizes: ["Standard"],
+    image: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 21,
+    title: "StudioBeat Studio Pro High-Res Headset",
+    brand: "SONICPRO",
+    category: "Audio",
+    merchant: "ShopSphere",
+    price: 3699,
+    originalPrice: 5299,
+    discount: "30% off",
+    rating: 4.9,
+    reviews: "1,150",
+    stock: 8,
+    eta: "Tomorrow",
+    sizes: ["Standard"],
+    image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=600&q=80"
+  },
+
+  // WATCHES
+  {
+    id: 8,
+    title: "Chronos GPS Smart Performance Watch",
+    brand: "HOROLOGE",
+    category: "Watches",
+    merchant: "PulseGadgets",
+    price: 2999,
+    originalPrice: 4299,
+    discount: "30% off",
+    rating: 4.7,
+    reviews: "1,890",
+    stock: 6,
+    eta: "Tomorrow",
+    sizes: ["44mm"],
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 13,
+    title: "Noise ColorFit Pro 5 AMOLED Smartwatch",
+    brand: "Noise",
+    category: "Watches",
+    merchant: "PulseGadgets",
+    price: 2799,
+    originalPrice: 4199,
+    discount: "33% off",
+    rating: 4.7,
+    reviews: "1,490",
+    stock: 18,
+    eta: "Tomorrow",
+    sizes: ["45mm"],
+    image: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 14,
+    title: "Fire-Boltt Gladiator BT Calling Watch",
+    brand: "Fire-Boltt",
+    category: "Watches",
+    merchant: "TechMart",
+    price: 2199,
+    originalPrice: 3299,
+    discount: "33% off",
+    rating: 4.4,
+    reviews: "980",
+    stock: 12,
+    eta: "Tomorrow",
+    sizes: ["1.96 Inch"],
+    image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 22,
+    title: "Amazfit Bip 5 Ultra Smartwatch",
+    brand: "Amazfit",
+    category: "Watches",
+    merchant: "PulseGadgets",
+    price: 3499,
+    originalPrice: 4699,
+    discount: "25% off",
+    rating: 4.7,
+    reviews: "720",
+    stock: 9,
+    eta: "in 2 days",
+    sizes: ["1.91 Inch"],
+    image: "https://images.unsplash.com/photo-1510017803434-a899398421b3?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 23,
+    title: "Titan Apex Rugged Outdoor Smartwatch",
+    brand: "HOROLOGE",
+    category: "Watches",
+    merchant: "ShopSphere",
+    price: 3799,
+    originalPrice: 5499,
+    discount: "31% off",
+    rating: 4.8,
+    reviews: "1,630",
+    stock: 5,
+    eta: "Tomorrow",
+    sizes: ["46mm"],
+    image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=600&q=80"
+  },
+
+  // BAGS
+  {
     id: 7,
     title: "AeroSport Lightweight Hydration Pack",
     brand: "URBANCRAFT",
     category: "Bags",
+    merchant: "QuickBuy",
     price: 1899,
     originalPrice: 2499,
     discount: "24% off",
@@ -122,31 +362,65 @@ const INITIAL_PRODUCTS = [
     image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80"
   },
   {
-    id: 8,
-    title: "Chronos GPS Smart Performance Watch",
-    brand: "HOROLOGE",
-    category: "Watches",
-    price: 2999,
-    originalPrice: 4299,
-    discount: "30% off",
+    id: 15,
+    title: "UrbanShield Commuter Tech Backpack",
+    brand: "URBANCRAFT",
+    category: "Bags",
+    merchant: "ShopSphere",
+    price: 2499,
+    originalPrice: 3499,
+    discount: "28% off",
     rating: 4.7,
-    reviews: "1,890",
-    stock: 6,
+    reviews: "1,120",
+    stock: 14,
     eta: "Tomorrow",
-    sizes: ["44mm"],
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80"
+    sizes: ["28L"],
+    image: "https://images.unsplash.com/photo-1577733966973-d680bffd2e80?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 16,
+    title: "Apex Explorer 45L Travel Duffel",
+    brand: "STRIDELINE",
+    category: "Bags",
+    merchant: "TechMart",
+    price: 2899,
+    originalPrice: 3999,
+    discount: "27% off",
+    rating: 4.6,
+    reviews: "890",
+    stock: 9,
+    eta: "Tomorrow",
+    sizes: ["45L"],
+    image: "https://images.unsplash.com/photo-1547949003-9792a18a2601?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: 24,
+    title: "CityVibe Urban Crossbody Sling Pack",
+    brand: "URBANCRAFT",
+    category: "Bags",
+    merchant: "QuickBuy",
+    price: 1499,
+    originalPrice: 2199,
+    discount: "31% off",
+    rating: 4.4,
+    reviews: "640",
+    stock: 16,
+    eta: "Tomorrow",
+    sizes: ["10L"],
+    image: "https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&w=600&q=80"
   }
 ];
 
 export default function ProductStorefront({ 
   onSelectProductForAgent,
+  onAddToCart = () => {},
   isAgentRunning = false,
   searchQuery = '',
 }) {
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [selectedCategory, setSelectedCategory] = useState('All products');
   const [selectedPriceRange, setSelectedPriceRange] = useState('all');
-  const [stockUpdatingId, setStockUpdatingId] = useState(null);
+  const [addedItemIds, setAddedItemIds] = useState({});
 
   const categories = [
     { id: 'All products', label: 'All products' },
@@ -165,7 +439,6 @@ export default function ProductStorefront({
   ];
 
   const handleStockAdjust = (productId, delta) => {
-    setStockUpdatingId(productId);
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
         const newStock = Math.max(0, p.stock + delta);
@@ -173,13 +446,18 @@ export default function ProductStorefront({
       }
       return p;
     }));
-    setTimeout(() => setStockUpdatingId(null), 300);
   };
 
   const handleSetZeroStock = (productId) => {
-    setStockUpdatingId(productId);
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, stock: 0 } : p));
-    setTimeout(() => setStockUpdatingId(null), 300);
+  };
+
+  const handleAddWithFeedback = (product) => {
+    onAddToCart(product);
+    setAddedItemIds(prev => ({ ...prev, [product.id]: true }));
+    setTimeout(() => {
+      setAddedItemIds(prev => ({ ...prev, [product.id]: false }));
+    }, 1500);
   };
 
   const filteredProducts = products.filter(item => {
@@ -291,6 +569,7 @@ export default function ProductStorefront({
             {filteredProducts.map(product => {
               const isOutOfStock = product.stock <= 0;
               const isLowStock = product.stock > 0 && product.stock <= 5;
+              const isAdded = !!addedItemIds[product.id];
 
               return (
                 <div key={product.id} className="meridian-product-card">
@@ -356,19 +635,32 @@ export default function ProductStorefront({
                       </div>
                     </div>
 
-                    {/* Action: Buy with AI Agent */}
+                    {/* Actions: Add to Cart + Buy with AI Agent */}
                     <div style={{ marginTop: '10px', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       
-                      <button
-                        onClick={() => onSelectProductForAgent(product)}
-                        disabled={isAgentRunning || isOutOfStock}
-                        className="btn btn-primary btn-sm"
-                        style={{ width: '100%', gap: '6px' }}
-                        title="Dispatch AI Agent with bounded mandate for this item"
-                      >
-                        <Zap size={14} />
-                        <span>Buy with AI Agent</span>
-                      </button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          onClick={() => handleAddWithFeedback(product)}
+                          disabled={isOutOfStock}
+                          className="btn btn-secondary btn-sm"
+                          style={{ flex: 1, gap: '4px', fontSize: '0.78rem' }}
+                          title="Add item to shopping cart"
+                        >
+                          {isAdded ? <Check size={14} color="#10b981" /> : <ShoppingBag size={14} />}
+                          <span>{isAdded ? 'Added!' : 'Add to Cart'}</span>
+                        </button>
+
+                        <button
+                          onClick={() => onSelectProductForAgent(product)}
+                          disabled={isAgentRunning || isOutOfStock}
+                          className="btn btn-primary btn-sm"
+                          style={{ flex: 1, gap: '4px', fontSize: '0.78rem' }}
+                          title="Dispatch AI Agent with bounded mandate for this item"
+                        >
+                          <Zap size={14} />
+                          <span>Buy with AI</span>
+                        </button>
+                      </div>
 
                       {/* Live Stock Testing Controls for Judges */}
                       <div style={{
