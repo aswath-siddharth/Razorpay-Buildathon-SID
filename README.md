@@ -5,7 +5,16 @@
 
 **Razorpay AI Buildathon — Track 01 (Autonomous Agentic Commerce)**
 
-[![Live Frontend](https://img.shields.io/badge/Frontend-Live%20Demo-0066FF?style=for-the-badge&logo=react)](https://razorpay-buildathon-sid.onrender.com)
+<br/>
+
+> ### 🚀 **LIVE DEMO & APPLICATION LINK**
+> ### 👉 [**https://razorpay-buildathon-sid.onrender.com**](https://razorpay-buildathon-sid.onrender.com) 👈
+>
+> ⚡ **Interactive Backend Swagger API**: [https://razorpay-buildathon-sid-1.onrender.com/docs](https://razorpay-buildathon-sid-1.onrender.com/docs)
+
+<br/>
+
+[![Live Frontend](https://img.shields.io/badge/LIVE%20DEMO-https%3A%2F%2Frazorpay--buildathon--sid.onrender.com-0066FF?style=for-the-badge&logo=render)](https://razorpay-buildathon-sid.onrender.com)
 [![Backend Swagger](https://img.shields.io/badge/Backend%20API-Swagger%20Docs-10B981?style=for-the-badge&logo=fastapi)](https://razorpay-buildathon-sid-1.onrender.com/docs)
 [![Razorpay Test Rails](https://img.shields.io/badge/Razorpay-Standard%20Checkout-00BAF2?style=for-the-badge&logo=razorpay)](https://razorpay.com)
 [![Groq LLM](https://img.shields.io/badge/Groq-Llama%203.3%20%2F%20GPT%20OSS-F55036?style=for-the-badge&logo=groq)](https://groq.com)
@@ -15,6 +24,7 @@
 [**🌐 Live Application**](https://razorpay-buildathon-sid.onrender.com) • [**⚡ API Documentation**](https://razorpay-buildathon-sid-1.onrender.com/docs) • [**📖 Deployment Guide**](./RENDER_DEPLOYMENT.md)
 
 </div>
+
 
 ---
 
@@ -33,10 +43,11 @@ As autonomous AI agents evolve from conversational assistants into transaction e
 
 ## 🔗 Live Deployments
 
-| Component | Platform | URL |
+| Component | Platform | Direct Live Link |
 |---|---|---|
-| **Frontend Web App** | Render Static Site | [https://razorpay-buildathon-sid.onrender.com](https://razorpay-buildathon-sid.onrender.com) |
-| **Backend REST API & Swagger** | Render Web Service | [https://razorpay-buildathon-sid-1.onrender.com/docs](https://razorpay-buildathon-sid-1.onrender.com/docs) |
+| 🌐 **Frontend Web Application** | Render Static Site | 👉 [**https://razorpay-buildathon-sid.onrender.com**](https://razorpay-buildathon-sid.onrender.com) |
+| ⚡ **Backend REST API & Swagger Docs** | Render Web Service | 👉 [**https://razorpay-buildathon-sid-1.onrender.com/docs**](https://razorpay-buildathon-sid-1.onrender.com/docs) |
+| 📦 **GitHub Repository** | GitHub | 👉 [**aswath-siddharth/Razorpay-Buildathon-SID-**](https://github.com/aswath-siddharth/Razorpay-Buildathon-SID-) |
 
 ---
 
