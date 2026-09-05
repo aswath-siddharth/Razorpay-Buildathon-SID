@@ -398,7 +398,7 @@ const CATALOG_DATABASE = [
   }
 ];
 
-import { RAZORPAY_KEY } from '../config';
+import { API_BASE, RAZORPAY_KEY } from '../config';
 
 export default function AIBuyerPanel({
   onRunAgentBackend,
@@ -436,11 +436,21 @@ export default function AIBuyerPanel({
   const [activeFailureScenario, setActiveFailureScenario] = useState('none');
   const [paymentStatus, setPaymentStatus] = useState('idle'); // 'idle' | 'awaiting' | 'completed' | 'cancelled'
 
-  const messagesEndRef = useRef(null);
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  };
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, candidateList, finalPick, traceSteps, showConfirmationPrompt]);
+    scrollToBottom();
+    const t1 = setTimeout(scrollToBottom, 100);
+    const t2 = setTimeout(scrollToBottom, 350);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [messages, candidateList, finalPick, traceSteps, showConfirmationPrompt, explainabilityReason]);
 
   // If user clicked "Buy with AI Agent" on a storefront card
   useEffect(() => {
@@ -765,10 +775,43 @@ export default function AIBuyerPanel({
     setPaymentStatus('idle');
     setActiveFailureScenario(scenario);
 
-    // Check for conversational greetings
-    const isGreeting = /^(hi|hello|hey|greetings|hola|help|what can you do|who are you|hi there)[!.]*$/i.test(queryText.trim());
-    if (isGreeting && !targetProduct) {
-      setTimeout(() => {
+    // 1. First attempt Groq LLM parse from backend, with instant deterministic fallback
+    let constraints;
+    try {
+      const resp = await fetch(`${API_BASE}/buyer/parse-intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: queryText })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.is_greeting && !targetProduct) {
+          const greetingMsg = {
+            id: `agent-greeting-${Date.now()}`,
+            sender: 'agent',
+            text: data.conversational_reply || "👋 Hello! I am your Autonomous AI Buyer Agent on Meridian.\n\nTell me what you'd like to buy (e.g. 'smartwatch under ₹3000 by tomorrow' or 'running shoes under ₹3000, size 9').",
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          setMessages(prev => [...prev, greetingMsg]);
+          setIsProcessing(false);
+          return;
+        }
+        constraints = {
+          category: data.category || "Running",
+          categoryLabel: data.categoryLabel || "running shoes",
+          budget_max: data.budget_max || 3000,
+          delivery_deadline: data.delivery_deadline || "Friday (2026-08-29)",
+          size: data.size || (targetProduct ? targetProduct.sizes?.[0] : null),
+          max_retries: data.max_retries || 2,
+          rawQuery: queryText
+        };
+      } else {
+        constraints = parseNaturalLanguageIntent(queryText, targetProduct);
+      }
+    } catch (err) {
+      // Deterministic fallback if backend is offline
+      const isGreeting = /^(hi|hello|hey|greetings|hola|help|what can you do|who are you|hi there)[!.]*$/i.test(queryText.trim());
+      if (isGreeting && !targetProduct) {
         const greetingMsg = {
           id: `agent-greeting-${Date.now()}`,
           sender: 'agent',
@@ -777,22 +820,21 @@ export default function AIBuyerPanel({
         };
         setMessages(prev => [...prev, greetingMsg]);
         setIsProcessing(false);
-      }, 400);
-      return;
+        return;
+      }
+      constraints = parseNaturalLanguageIntent(queryText, targetProduct);
     }
 
-    const constraints = parseNaturalLanguageIntent(queryText, targetProduct);
     setMandateConstraints(constraints);
 
-    setTimeout(() => {
-      const sizeStr = constraints.size ? `, size ${constraints.size}` : '';
-      const agentAckMsg = {
-        id: `agent-ack-${Date.now()}`,
-        sender: 'agent',
-        text: `Understood! I parsed your intent mandate: Looking for **${constraints.categoryLabel}** under **₹${constraints.budget_max.toLocaleString('en-IN')}**${sizeStr}, arriving **${constraints.delivery_deadline}**. Querying multi-merchant catalogs...`,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, agentAckMsg]);
+    const sizeStr = constraints.size ? `, size ${constraints.size}` : '';
+    const agentAckMsg = {
+      id: `agent-ack-${Date.now()}`,
+      sender: 'agent',
+      text: `Understood! I parsed your intent mandate: Looking for **${constraints.categoryLabel}** under **₹${constraints.budget_max.toLocaleString('en-IN')}**${sizeStr}, arriving **${constraints.delivery_deadline}**. Querying multi-merchant catalogs...`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setMessages(prev => [...prev, agentAckMsg]);
 
       setTimeout(() => {
         let pool = CATALOG_DATABASE.filter(p => p.category === constraints.category);
@@ -874,11 +916,9 @@ export default function AIBuyerPanel({
         setExplainabilityReason(explainText);
         setShowConfirmationPrompt(true);
         setIsProcessing(false);
-
       }, 650);
-
-    }, 450);
   };
+
 
   // Start the Live 7-Stage Execution Trace
   const handleConfirmAndExecute = (overrideForceBreach = false) => {

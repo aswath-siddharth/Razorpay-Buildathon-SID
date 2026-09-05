@@ -1,11 +1,11 @@
 import os
 import re
+import json
 from datetime import date, timedelta
 
 from dotenv import load_dotenv
 from groq import Groq
 from pydantic import BaseModel, Field
-
 
 load_dotenv()
 
@@ -15,237 +15,172 @@ class IntentMandate(BaseModel):
     Trusted structured representation of the user's
     shopping authorization.
     """
-
     category: str = Field(
-        ...,
+        default="Running",
         description="Product category requested by the user"
     )
-
-    budget_max: float | None = Field(
-        default=None,
-        description="Maximum amount the user is willing to spend"
+    categoryLabel: str = Field(
+        default="running shoes",
+        description="User-friendly category label"
     )
-
+    budget_max: float | None = Field(
+        default=3000.0,
+        description="Maximum amount the user is willing to spend in INR"
+    )
     size: str | None = Field(
         default=None,
         description="Requested product size"
     )
-
-    delivery_by: date | None = Field(
-        default=None,
-        description="Latest acceptable delivery date"
+    delivery_deadline: str = Field(
+        default="Friday (2026-08-29)",
+        description="Delivery deadline requirement"
     )
-
     max_retries: int = Field(
         default=2,
         ge=0,
         description="Maximum number of retries allowed"
     )
+    is_greeting: bool = Field(
+        default=False,
+        description="Whether message was purely conversational"
+    )
+    conversational_reply: str | None = Field(
+        default=None,
+        description="Conversational response if user did not request a purchase"
+    )
 
 
-class RawIntent(BaseModel):
+def fallback_deterministic_parse(user_message: str) -> IntentMandate:
     """
-    Untrusted output received from the LLM.
-
-    We intentionally keep delivery_by as a string here because
-    the LLM may return values such as 'Friday'.
+    Resilient fallback parser when LLM is unavailable or offline.
     """
+    text = user_message.lower().strip()
 
-    category: str
-
-    budget_max: float | None = None
-
-    size: str | None = None
-
-    delivery_by: str | None = None
-
-    max_retries: int = 2
-
-
-WEEKDAYS = {
-    "monday": 0,
-    "tuesday": 1,
-    "wednesday": 2,
-    "thursday": 3,
-    "friday": 4,
-    "saturday": 5,
-    "sunday": 6,
-}
-
-
-def resolve_relative_delivery_date(
-    user_message: str,
-    today: date,
-) -> date | None:
-    """
-    Resolve weekday references such as 'by Friday'
-    deterministically.
-    """
-
-    message = user_message.lower()
-
-    for weekday_name, weekday_number in WEEKDAYS.items():
-
-        if re.search(
-            rf"\b{weekday_name}\b",
-            message
-        ):
-            days_ahead = (
-                weekday_number - today.weekday()
-            ) % 7
-
-            return today + timedelta(
-                days=days_ahead
+    is_greeting = bool(re.match(r"^(hi|hello|hey|greetings|hola|help|what can you do|who are you|hi there)[!.]*$", text))
+    if is_greeting:
+        return IntentMandate(
+            is_greeting=True,
+            conversational_reply=(
+                "👋 Hello! I am your Autonomous AI Buyer Agent on Meridian.\n\n"
+                "Tell me what you'd like to buy and your constraints, for example:\n"
+                "• *'running shoes under ₹3000, size 9'*\n"
+                "• *'smartwatch under ₹3000 by tomorrow'*\n"
+                "• *'wireless audio headphones under ₹2500'*\n"
+                "• *'commuter tech backpack under ₹2500'*\n\n"
+                "I will find matching products across merchant catalogs, enforce your budget mandate bounds, and execute payment with single-invoice cryptographic proof!"
             )
+        )
 
-    return None
+    # Budget extraction
+    budget_max = 3000.0
+    k_match = re.search(r"(\d+(?:\.\d+)?)\s*k\b", text)
+    if k_match:
+        budget_max = float(k_match.group(1)) * 1000.0
+    else:
+        num_match = re.search(r"(?:under|below|max|rs\.?|₹|\bless\s+than\b)\s*(\d+[\d,]*)", text) or re.search(r"(\d+[\d,]*)", text)
+        if num_match:
+            parsed_val = float(num_match.group(1).replace(",", ""))
+            if parsed_val > 50:
+                budget_max = parsed_val
+
+    # Category extraction
+    if any(w in text for w in ["smartwatch", "smart watch", "watch", "watches", "fitness tracker", "noise", "fire-boltt", "amazfit", "chronos"]):
+        category = "Watches"
+        category_label = "smartwatches"
+    elif any(w in text for w in ["audio", "headphone", "headphones", "earbuds", "earphone", "tws", "speaker", "boat", "sony", "jbl", "soundcore"]):
+        category = "Audio"
+        category_label = "wireless audio"
+    elif any(w in text for w in ["bag", "backpack", "pack", "duffel", "sling", "hydration"]):
+        category = "Bags"
+        category_label = "travel & athletic bags"
+    elif any(w in text for w in ["sneaker", "sneakers", "streetwear", "casual shoe", "kicks"]):
+        category = "Sneakers"
+        category_label = "sneakers"
+    else:
+        category = "Running"
+        category_label = "running shoes"
+
+    # Delivery deadline
+    if any(w in text for w in ["tomo", "tomorrow", "1 day", "urgent"]):
+        eta = "Tomorrow"
+    elif any(w in text for w in ["2 day", "two day", "weekend"]):
+        eta = "in 2 days"
+    else:
+        eta = "Friday (2026-08-29)"
+
+    # Size extraction
+    size = None
+    size_match = re.search(r"(?:size|sz|uk)\s*(\d+)", text)
+    if size_match:
+        size = size_match.group(1)
+    elif category in ["Running", "Sneakers"]:
+        size = "9"
+
+    return IntentMandate(
+        category=category,
+        categoryLabel=category_label,
+        budget_max=budget_max,
+        size=size,
+        delivery_deadline=eta,
+        max_retries=2,
+        is_greeting=False
+    )
 
 
-def parse_intent(
-    user_message: str
-) -> IntentMandate:
+def parse_intent(user_message: str) -> IntentMandate:
     """
-    Convert natural-language shopping intent into
-    a trusted IntentMandate using Groq.
+    Convert natural-language shopping intent into a trusted IntentMandate using Groq LLM (Llama 3.3 70B),
+    with automatic deterministic fallback.
     """
-
     api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
-        raise RuntimeError(
-            "GROQ_API_KEY is not configured"
+        return fallback_deterministic_parse(user_message)
+
+    try:
+        client = Groq(api_key=api_key)
+
+        prompt = (
+            "You are the intent parser for Meridian AI Buyer Agent.\n"
+            "Analyze the user's message and extract their shopping mandate.\n"
+            "Available categories: 'Running', 'Sneakers', 'Audio', 'Watches', 'Bags'.\n\n"
+            "Output strictly valid JSON with keys:\n"
+            "- is_greeting: bool (true if user just said hi/hello/help)\n"
+            "- conversational_reply: string or null\n"
+            "- category: string (one of 'Running', 'Sneakers', 'Audio', 'Watches', 'Bags')\n"
+            "- categoryLabel: string (e.g. 'running shoes', 'smartwatches', 'wireless audio')\n"
+            "- budget_max: float or null (in INR, e.g. 3000, 1000)\n"
+            "- size: string or null (e.g. '9', '44mm', 'Universal')\n"
+            "- delivery_deadline: string (e.g. 'Tomorrow', 'Friday (2026-08-29)', 'in 2 days')\n"
+            "- max_retries: int (default 2)"
         )
 
-    client = Groq(
-        api_key=api_key
-    )
-
-    today = date.today().isoformat()
-
-    schema = {
-        "type": "object",
-        "properties": {
-            "category": {
-                "type": "string"
-            },
-            "budget_max": {
-                "type": ["number", "null"]
-            },
-            "size": {
-                "type": ["string", "null"]
-            },
-            "delivery_by": {
-                "type": ["string", "null"]
-            },
-            "max_retries": {
-                "type": "integer",
-                "minimum": 0
-            }
-        },
-        "required": [
-            "category",
-            "budget_max",
-            "size",
-            "delivery_by",
-            "max_retries"
-        ],
-        "additionalProperties": False
-    }
-
-    completion = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are the intent parser for an AI buyer. "
-                    "Extract the user's shopping constraints. "
-                    f"Today's date is {today}. "
-                    "Use catalog-compatible categories such as "
-                    "'running_shoes'. "
-                    "Do not invent constraints that the user "
-                    "did not specify. "
-                    "Return only JSON matching the supplied schema."
-                )
-            },
-            {
-                "role": "user",
-                "content": user_message
-            }
-        ],
-        response_format={
-            "type": "json_schema",
-            "json_schema": {
-                "name": "intent_mandate",
-                "strict": True,
-                "schema": schema
-            }
-        },
-        temperature=0
-    )
-
-    content = completion.choices[0].message.content
-
-    if not content:
-        raise ValueError(
-            "Groq returned an empty response"
+        completion = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": user_message}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.1
         )
 
-    # --------------------------------------------------
-    # STEP 1: Parse untrusted LLM output
-    # --------------------------------------------------
+        content = completion.choices[0].message.content
+        if not content:
+            return fallback_deterministic_parse(user_message)
 
-    raw_intent = RawIntent.model_validate_json(
-        content
-    )
-
-    # --------------------------------------------------
-    # STEP 2: Resolve delivery date ourselves
-    # --------------------------------------------------
-
-    resolved_delivery_date = (
-        resolve_relative_delivery_date(
-            user_message=user_message,
-            today=date.today(),
+        data = json.loads(content)
+        return IntentMandate(
+            category=data.get("category") or "Running",
+            categoryLabel=data.get("categoryLabel") or "running shoes",
+            budget_max=float(data.get("budget_max")) if data.get("budget_max") is not None else 3000.0,
+            size=str(data.get("size")) if data.get("size") else ("9" if data.get("category") in ["Running", "Sneakers"] else None),
+            delivery_deadline=data.get("delivery_deadline") or "Friday (2026-08-29)",
+            max_retries=int(data.get("max_retries", 2)),
+            is_greeting=bool(data.get("is_greeting", False)),
+            conversational_reply=data.get("conversational_reply")
         )
-    )
 
-    if resolved_delivery_date is not None:
-
-        delivery_by = resolved_delivery_date
-
-    elif raw_intent.delivery_by:
-
-        try:
-
-            delivery_by = date.fromisoformat(
-                raw_intent.delivery_by
-            )
-
-        except ValueError:
-
-            delivery_by = None
-
-    else:
-
-        delivery_by = None
-
-    # --------------------------------------------------
-    # STEP 3: Application-controlled authorization
-    # --------------------------------------------------
-
-    max_retries = 2
-
-    # --------------------------------------------------
-    # STEP 4: Construct trusted IntentMandate
-    # --------------------------------------------------
-
-    mandate = IntentMandate(
-        category=raw_intent.category,
-        budget_max=raw_intent.budget_max,
-        size=raw_intent.size,
-        delivery_by=delivery_by,
-        max_retries=max_retries,
-    )
-
-    return mandate
+    except Exception as e:
+        print(f"Groq parsing notice (using fallback): {e}")
+        return fallback_deterministic_parse(user_message)

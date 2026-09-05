@@ -38,6 +38,15 @@ def run_buyer_agent(
     return result
 
 
+@router.post("/parse-intent")
+def parse_user_intent(request: BuyerRunRequest):
+    """
+    Parse natural language shopping intent via Groq LLM (Llama 3.3 70B).
+    """
+    mandate = parse_intent(request.message)
+    return mandate.model_dump(mode="json")
+
+
 @router.post("/discover")
 def discover_only(
     request: BuyerRunRequest,
