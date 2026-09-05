@@ -765,6 +765,22 @@ export default function AIBuyerPanel({
     setPaymentStatus('idle');
     setActiveFailureScenario(scenario);
 
+    // Check for conversational greetings
+    const isGreeting = /^(hi|hello|hey|greetings|hola|help|what can you do|who are you|hi there)[!.]*$/i.test(queryText.trim());
+    if (isGreeting && !targetProduct) {
+      setTimeout(() => {
+        const greetingMsg = {
+          id: `agent-greeting-${Date.now()}`,
+          sender: 'agent',
+          text: "👋 Hello! I am your Autonomous AI Buyer Agent on Meridian.\n\nTell me what you'd like to buy and your constraints, for example:\n• *'running shoes under ₹3000, size 9'*\n• *'smartwatch under ₹3000 by tomorrow'*\n• *'wireless audio headphones under ₹2500'*\n• *'commuter tech backpack under ₹2500'*\n\nI will find the best candidates across merchant catalogs, enforce your budget mandate bounds, and execute payment with single-invoice cryptographic proof!",
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, greetingMsg]);
+        setIsProcessing(false);
+      }, 400);
+      return;
+    }
+
     const constraints = parseNaturalLanguageIntent(queryText, targetProduct);
     setMandateConstraints(constraints);
 
