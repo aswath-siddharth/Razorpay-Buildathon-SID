@@ -1,11 +1,39 @@
 import React, { useState } from 'react';
-import { Send, Zap, RefreshCw, AlertTriangle, ShieldCheck, Settings, Play, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+  Send, 
+  Zap, 
+  RefreshCw, 
+  AlertTriangle, 
+  ShieldCheck, 
+  Settings, 
+  Play, 
+  Check, 
+  ChevronDown, 
+  ChevronUp,
+  Sliders,
+  Cpu,
+  Sparkles
+} from 'lucide-react';
 
-export default function PromptStudio({ onRunAgent, isRunning, currentStage }) {
-  const [prompt, setPrompt] = useState("Buy me running shoes under ₹3,000, size 9, that can arrive by Friday.");
+export default function PromptStudio({ 
+  onRunAgent, 
+  isRunning, 
+  currentStage,
+  customInitialPrompt
+}) {
+  const [prompt, setPrompt] = useState(
+    customInitialPrompt || "Buy me running shoes under ₹3,000, size 9, that can arrive by Friday."
+  );
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [maxRetries, setMaxRetries] = useState(2);
   const [simulateFailure, setSimulateFailure] = useState("none");
+
+  // Keep synced if user clicked a product in the storefront
+  React.useEffect(() => {
+    if (customInitialPrompt) {
+      setPrompt(customInitialPrompt);
+    }
+  }, [customInitialPrompt]);
 
   const scenarios = [
     {
@@ -62,7 +90,7 @@ export default function PromptStudio({ onRunAgent, isRunning, currentStage }) {
     { id: 'INVENTORY_CHECK', label: '3. Inventory / Retry' },
     { id: 'ISSUE_PAYMENT_MANDATE', label: '4. Issue Mandate' },
     { id: 'CREATE_RAZORPAY_ORDER', label: '5. Razorpay Order' },
-    { id: 'PURCHASE_COMPLETED', label: '6. User Confirmed' },
+    { id: 'PURCHASE_COMPLETED', label: '6. Webhook Verified' },
   ];
 
   const getStageIndex = (stage) => {
@@ -82,12 +110,28 @@ export default function PromptStudio({ onRunAgent, isRunning, currentStage }) {
     <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
       
       {/* Section Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Zap size={20} color="var(--accent-cyan)" />
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#ffffff' }}>
-            Buyer Agent Prompt Studio
-          </h2>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            background: 'rgba(0, 186, 242, 0.15)',
+            border: '1px solid var(--border-glow)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Zap size={18} color="var(--accent-cyan)" />
+          </div>
+          <div>
+            <h2 style={{ fontSize: '1.18rem', fontWeight: 800, color: '#ffffff' }}>
+              Buyer Agent Prompt Studio
+            </h2>
+            <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
+              Natural language intent converted into mandate-bound Razorpay transactions
+            </p>
+          </div>
         </div>
         <span className="badge badge-info" style={{ fontSize: '0.72rem' }}>
           Natural Language → Bounded Action
@@ -96,10 +140,10 @@ export default function PromptStudio({ onRunAgent, isRunning, currentStage }) {
 
       {/* Preset Scenarios for Fast Evaluation */}
       <div style={{ marginBottom: '20px' }}>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Pitch Demo Scenarios (1-Click Execution):
+        <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginBottom: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Interactive Judge / Pitch Scenarios (1-Click Run):
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '10px' }}>
           {scenarios.map((sc) => (
             <button
               key={sc.id}
@@ -112,7 +156,7 @@ export default function PromptStudio({ onRunAgent, isRunning, currentStage }) {
                 cursor: isRunning ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s ease',
                 border: '1px solid var(--border-subtle)',
-                background: 'rgba(15, 23, 42, 0.65)',
+                background: 'rgba(12, 17, 30, 0.7)',
                 opacity: isRunning ? 0.6 : 1,
               }}
               onMouseEnter={(e) => {
@@ -128,10 +172,10 @@ export default function PromptStudio({ onRunAgent, isRunning, currentStage }) {
                 }
               }}
             >
-              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
+              <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
                 {sc.title}
               </div>
-              <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: 1.3 }}>
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
                 {sc.desc}
               </div>
             </button>
@@ -141,8 +185,8 @@ export default function PromptStudio({ onRunAgent, isRunning, currentStage }) {
 
       {/* Query Form */}
       <form onSubmit={handleCustomSubmit} style={{ marginBottom: '16px' }}>
-        <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>
-          Natural Language Intent Query:
+        <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>
+          Natural Language Shopping Intent:
         </label>
         <div style={{ display: 'flex', gap: '10px' }}>
           <input
@@ -152,31 +196,30 @@ export default function PromptStudio({ onRunAgent, isRunning, currentStage }) {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="e.g. Buy me running shoes under ₹3000, size 9, arrive by Friday..."
             disabled={isRunning}
-            style={{ flex: 1 }}
           />
           <button
             type="submit"
             disabled={isRunning || !prompt.trim()}
-            className="btn btn-primary"
-            style={{ minWidth: '130px' }}
+            className="btn btn-cyan"
+            style={{ whiteSpace: 'nowrap', minWidth: '150px' }}
           >
             {isRunning ? (
               <>
                 <RefreshCw size={16} className="spinner" />
-                <span>Running...</span>
+                <span>Executing...</span>
               </>
             ) : (
               <>
-                <Play size={16} fill="#ffffff" />
-                <span>Execute</span>
+                <Send size={16} />
+                <span>Run Agent</span>
               </>
             )}
           </button>
         </div>
       </form>
 
-      {/* Advanced Parameters Accordion */}
-      <div style={{ marginBottom: '20px' }}>
+      {/* Advanced Toggle */}
+      <div style={{ marginBottom: '16px' }}>
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
@@ -184,102 +227,91 @@ export default function PromptStudio({ onRunAgent, isRunning, currentStage }) {
             background: 'none',
             border: 'none',
             color: 'var(--text-secondary)',
-            fontSize: '0.8rem',
+            fontSize: '0.76rem',
+            fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '5px',
             cursor: 'pointer',
-            padding: '4px 0',
+            padding: 0,
           }}
         >
-          <Settings size={14} />
-          <span>Advanced Mandate Bounds & Failure Simulator</span>
+          <Sliders size={13} color="var(--accent-cyan)" />
+          <span>Advanced Mandate & Failure Simulation Controls</span>
           {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
 
         {showAdvanced && (
-          <div className="glass-panel" style={{ marginTop: '10px', padding: '14px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+          <div className="glass-panel" style={{ marginTop: '12px', padding: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', border: '1px solid var(--border-medium)' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                Failure Simulation Mode:
+              <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>
+                Simulate Mid-Flow Failure Mode:
               </label>
               <select
-                className="select-custom"
                 value={simulateFailure}
                 onChange={(e) => setSimulateFailure(e.target.value)}
+                className="input-text"
+                style={{ fontSize: '0.8rem', padding: '8px 12px' }}
                 disabled={isRunning}
               >
-                <option value="none">None (Real Catalog State)</option>
-                <option value="out_of_stock">Mid-Flow Stockout (Rank #1)</option>
-                <option value="price_mismatch">Price Surge Exceeding Budget</option>
+                <option value="none">None (Happy Path Normal)</option>
+                <option value="out_of_stock">Mid-Flow Stockout (Trigger Graceful Fallback)</option>
+                <option value="price_mismatch">Price Surge Mismatch (Mandate Bound Rejection)</option>
               </select>
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                Max Bounded Retries: <strong style={{ color: 'var(--accent-cyan)' }}>{maxRetries}</strong>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 600 }}>
+                Max Retries Allowed by Mandate:
               </label>
-              <input
-                type="range"
-                min="0"
-                max="4"
+              <select
                 value={maxRetries}
-                onChange={(e) => setMaxRetries(parseInt(e.target.value))}
+                onChange={(e) => setMaxRetries(Number(e.target.value))}
+                className="input-text"
+                style={{ fontSize: '0.8rem', padding: '8px 12px' }}
                 disabled={isRunning}
-                style={{ width: '100%', accentColor: 'var(--accent-cyan)', cursor: 'pointer' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                <span>0 (No fallback)</span>
-                <span>2 (Standard)</span>
-                <span>4 (Extended)</span>
-              </div>
+              >
+                <option value={2}>2 Retries (Standard Bounded Recovery)</option>
+                <option value={1}>1 Retry (Strict Recovery)</option>
+                <option value={0}>0 Retries (Immediate Safe Abort)</option>
+              </select>
             </div>
           </div>
         )}
       </div>
 
-      {/* State Machine Step Progress */}
-      <div>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-          Autonomous Execution State Machine:
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
-          {stages.map((stage, idx) => {
-            const isCompleted = activeStageIdx > idx;
-            const isCurrent = activeStageIdx === idx;
+      {/* Real-Time State Machine Progression */}
+      <div style={{
+        marginTop: '20px',
+        paddingTop: '16px',
+        borderTop: '1px solid var(--border-subtle)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Cpu size={14} color="var(--accent-cyan)" /> State Machine Execution Pipeline:
+          </span>
+          {isRunning && (
+            <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>
+              <RefreshCw size={11} className="spinner" /> Agent Active
+            </span>
+          )}
+        </div>
+
+        <div className="pipeline-bar">
+          {stages.map((st, idx) => {
+            const isCompleted = activeStageIdx > idx || (!isRunning && activeStageIdx === 5);
+            const isActive = isRunning && activeStageIdx === idx;
+
             return (
               <div
-                key={stage.id}
-                style={{
-                  padding: '8px 4px',
-                  textAlign: 'center',
-                  borderRadius: '6px',
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
-                  transition: 'all 0.3s ease',
-                  background: isCurrent 
-                    ? 'rgba(0, 186, 242, 0.2)' 
-                    : isCompleted 
-                    ? 'rgba(16, 185, 129, 0.15)' 
-                    : 'rgba(255, 255, 255, 0.03)',
-                  border: isCurrent 
-                    ? '1px solid var(--accent-cyan)' 
-                    : isCompleted 
-                    ? '1px solid rgba(16, 185, 129, 0.4)' 
-                    : '1px solid rgba(255, 255, 255, 0.05)',
-                  color: isCurrent 
-                    ? '#ffffff' 
-                    : isCompleted 
-                    ? '#10b981' 
-                    : 'var(--text-muted)',
-                }}
+                key={st.id}
+                className={`pipeline-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '2px' }}>
-                  {isCompleted ? <Check size={12} color="#10b981" /> : isCurrent ? <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#00baf2' }} /> : null}
-                  <span>Step {idx + 1}</span>
+                <div className="pipeline-node">
+                  {isCompleted ? <Check size={15} /> : idx + 1}
                 </div>
-                <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {stage.label.split('. ')[1]}
+                <div className="pipeline-label">
+                  {st.label}
                 </div>
               </div>
             );

@@ -20,6 +20,7 @@ class ProductResponse(BaseModel):
     stock: int
     attributes: dict
     delivery_eta: str
+    image_url: str | None = None
 
     class Config:
         from_attributes = True

@@ -44,6 +44,7 @@ class Product(Base):
     attributes = Column(JSON, nullable=False)
 
     delivery_eta = Column(String, nullable=False)
+    image_url = Column(String, nullable=True)
 
     merchant = relationship(
         "Merchant",

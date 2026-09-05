@@ -41,6 +41,8 @@ def discover_products(
             "stock": product.stock,
             "delivery_eta": product.delivery_eta,
             "merchant_rating": merchant.rating,
+            "image_url": product.image_url or (product.attributes.get("image_url") if isinstance(product.attributes, dict) else None),
+            "attributes": product.attributes,
             "accepted": matches,
             "explanation": explanation,
             "score": None,

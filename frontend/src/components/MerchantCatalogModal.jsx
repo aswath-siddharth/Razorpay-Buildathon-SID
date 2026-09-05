@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Database, Search, RefreshCw, Star, Tag, Truck, Box } from 'lucide-react';
+import { X, Database, Search, RefreshCw, Star, Tag, Truck, Box, Plus, Minus, Check } from 'lucide-react';
 
 export default function MerchantCatalogModal({ isOpen, onClose }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -27,19 +28,36 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
     }
   };
 
+  const handleUpdateStock = async (productId, newStock) => {
+    setUpdatingId(productId);
+    try {
+      const resp = await fetch(`http://localhost:8000/products/${productId}/stock?stock=${Math.max(0, newStock)}`, {
+        method: 'PATCH',
+      });
+      if (resp.ok) {
+        const updated = await resp.json();
+        setProducts(prev => prev.map(p => p.id === productId ? updated : p));
+      }
+    } catch (e) {
+      console.error("Failed to update stock", e);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   const filtered = products.filter(p => 
     p.title.toLowerCase().includes(search.toLowerCase()) ||
-    (p.merchant?.name || '').toLowerCase().includes(search.toLowerCase())
+    (p.attributes?.brand || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(3, 7, 18, 0.85)',
-      backdropFilter: 'blur(8px)',
+      background: 'rgba(3, 7, 18, 0.88)',
+      backdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -48,11 +66,12 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
     }}>
       <div className="glass-card" style={{
         width: '100%',
-        maxWidth: '900px',
-        maxHeight: '85vh',
+        maxWidth: '1020px',
+        maxHeight: '88vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        border: '1px solid var(--border-medium)'
       }}>
         
         {/* Modal Header */}
@@ -64,13 +83,13 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
           justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Database size={20} color="var(--accent-cyan)" />
+            <Database size={22} color="var(--accent-cyan)" />
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff' }}>
-                Synthetic Multi-Merchant Catalog
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>
+                Multi-Merchant Database Catalog ({products.length} Items)
               </h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Agent-readable structured inventory across test merchants
+                Live structured database inventory accessible to AI Buyer Agent with real-time stock simulation
               </p>
             </div>
           </div>
@@ -89,13 +108,13 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Search & Refresh */}
+        {/* Search & Refresh Bar */}
         <div style={{ padding: '14px 24px', display: 'flex', gap: '10px', borderBottom: '1px solid var(--border-subtle)' }}>
           <div style={{ position: 'relative', flex: 1 }}>
             <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '12px' }} />
             <input
               type="text"
-              placeholder="Search products or merchants..."
+              placeholder="Search by title, brand, or category..."
               className="input-text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -111,51 +130,107 @@ export default function MerchantCatalogModal({ isOpen, onClose }) {
         {/* Product Grid */}
         <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px' }}>
-              <RefreshCw size={24} className="spinner" color="var(--accent-cyan)" />
-              <p style={{ marginTop: '10px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Loading catalog...</p>
+            <div style={{ textAlign: 'center', padding: '60px' }}>
+              <RefreshCw size={28} className="spinner" color="var(--accent-cyan)" />
+              <p style={{ marginTop: '10px', fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Loading catalog images and records...</p>
             </div>
           ) : filtered.length === 0 ? (
-            <p style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>No products match your search.</p>
+            <p style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No products match your search.</p>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '14px' }}>
-              {filtered.map((item) => (
-                <div key={item.id} className="glass-panel" style={{ padding: '14px', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                    <span className="badge badge-info" style={{ fontSize: '0.68rem' }}>
-                      ID #{item.id}
-                    </span>
-                    <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ffffff' }}>
-                      ₹{item.price?.toLocaleString('en-IN')}
-                    </span>
-                  </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+              {filtered.map((item) => {
+                const img = item.image_url || item.attributes?.image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=700&q=80';
+                const isUpdating = updatingId === item.id;
 
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
-                    {item.title}
-                  </div>
-
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-cyan)', marginBottom: '10px' }}>
-                    Merchant ID: {item.merchant_id}
-                  </div>
-
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <Box size={13} color={item.stock > 0 ? "#10b981" : "#ef4444"} />
-                      <span>Stock: <strong style={{ color: item.stock > 0 ? "#10b981" : "#ef4444" }}>{item.stock} units</strong></span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <Truck size={13} color="#38bdf8" />
-                      <span>ETA: {item.delivery_eta}</span>
-                    </div>
-                    {item.attributes?.size && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <Tag size={13} color="#c084fc" />
-                        <span>Size: {item.attributes.size}</span>
+                return (
+                  <div key={item.id} className="glass-panel" style={{ padding: '14px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    
+                    {/* Thumbnail & Badges */}
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <div style={{ width: '80px', height: '70px', borderRadius: '8px', overflow: 'hidden', background: '#0b0f19', flexShrink: 0 }}>
+                        <img src={img} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
-                    )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                          <span className="badge badge-info" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>
+                            ID #{item.id}
+                          </span>
+                          <span style={{ fontSize: '1rem', fontWeight: 800, color: '#ffffff' }}>
+                            ₹{item.price?.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                        <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: '#ffffff', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.title}
+                        </h4>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--accent-cyan)' }}>
+                          Merchant ID: {item.merchant_id}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stock & ETA Controls */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'rgba(8, 12, 22, 0.6)', padding: '6px 10px', borderRadius: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <Truck size={13} color="var(--accent-cyan)" />
+                        <span>ETA: {item.delivery_eta}</span>
+                      </div>
+                      
+                      {/* Stock Adjuster */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <button
+                          onClick={() => handleUpdateStock(item.id, item.stock - 1)}
+                          disabled={item.stock <= 0 || isUpdating}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            width: '18px',
+                            height: '18px',
+                            color: '#ffffff',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Minus size={10} />
+                        </button>
+                        <span style={{ fontWeight: 700, color: item.stock > 0 ? '#10b981' : '#ef4444' }}>
+                          {item.stock}
+                        </span>
+                        <button
+                          onClick={() => handleUpdateStock(item.id, item.stock + 5)}
+                          disabled={isUpdating}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            width: '18px',
+                            height: '18px',
+                            color: '#ffffff',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Plus size={10} />
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStock(item.id, 0)}
+                          disabled={item.stock === 0 || isUpdating}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.2)',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '0 5px',
+                            fontSize: '0.65rem',
+                            color: '#f87171',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          0
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
