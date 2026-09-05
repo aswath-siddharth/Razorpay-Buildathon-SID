@@ -657,7 +657,7 @@ export default function AIBuyerPanel({
         notes: {
           mandate_token: "mnd_tok_892104a99b",
           merchant: item?.merchant || "TechMart",
-          bounded_ceiling: `INR ${mandateConstraints?.budget_max || 3000}`
+          bounded_ceiling: mandateConstraints?.budget_max ? `INR ${mandateConstraints.budget_max}` : `INR ${item?.price || 2799} (Exact Price)`
         },
         theme: {
           color: "#0066ff"
@@ -801,7 +801,7 @@ export default function AIBuyerPanel({
         constraints = {
           category: data.category || "Running",
           categoryLabel: data.categoryLabel || "running shoes",
-          budget_max: data.budget_max || 3000,
+          budget_max: (data.budget_max !== undefined && data.budget_max !== null) ? data.budget_max : null,
           delivery_deadline: data.delivery_deadline || "Friday (2026-08-29)",
           size: data.size || (targetProduct ? targetProduct.sizes?.[0] : null),
           max_retries: data.max_retries || 2,
@@ -952,20 +952,21 @@ export default function AIBuyerPanel({
       eta: "Tomorrow"
     };
 
-    const budgetCeiling = mandateConstraints?.budget_max || 3000;
+    const budgetCeiling = mandateConstraints?.budget_max || chosen.price;
     const actualPrice = isBreach && hasZeroMatch ? chosen.price : isBreach ? budgetCeiling + 499 : chosen.price;
+    const ceilingDisplayStr = mandateConstraints?.budget_max ? `₹${mandateConstraints.budget_max.toLocaleString('en-IN')}` : `₹${chosen.price.toLocaleString('en-IN')} (Exact)`;
 
     const initialSteps = [
       {
         id: 'INTENT_PARSED',
         title: '1. Intent Parsed',
-        description: `Structured constraints: Category (${mandateConstraints?.category || 'General'}), Budget Ceiling (₹${budgetCeiling.toLocaleString('en-IN')}), ETA (${mandateConstraints?.delivery_deadline || 'Friday'})`,
+        description: `Structured constraints: Category (${mandateConstraints?.category || 'General'}), Budget Ceiling (${ceilingDisplayStr}), ETA (${mandateConstraints?.delivery_deadline || 'Friday'})`,
         status: 'running',
         timestamp: '+0.00s',
         rawPayload: {
           intent: "bounded_agent_purchase",
           category: mandateConstraints?.category || "Running",
-          budget_max_inr: budgetCeiling,
+          budget_max_inr: mandateConstraints?.budget_max || chosen.price,
           size_spec: mandateConstraints?.size || "Universal",
           delivery_deadline: mandateConstraints?.delivery_deadline || "Friday",
           items_count: checkoutItems.length > 0 ? checkoutItems.length : 1,
